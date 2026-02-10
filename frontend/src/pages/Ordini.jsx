@@ -42,6 +42,7 @@ export default function Ordini() {
         trasportatoriApi.lista(),
         muliniApi.lista()
       ]);
+      console.log("Esempio riga ordine:", ordiniRes.data[0]?.righe?.[0]); // Controlla i nomi dei campi qui
       setOrdini(ordiniRes.data);
       setTrasportatori(traspRes.data);
       setMulini(muliniRes.data);
@@ -85,16 +86,35 @@ export default function Ordini() {
     );
   };
 
-  // Aggiorna data ritiro inline
   const handleDataRitiroChange = async (ordineId, nuovaData, e) => {
     e.stopPropagation();
+
+    // Se la data viene cancellata (stringa vuota), procediamo direttamente
+    if (nuovaData) {
+      const ordine = ordini.find(o => o.id === ordineId);
+      const dataOrdine = new Date(ordine.data_ordine);
+      dataOrdine.setHours(0, 0, 0, 0);
+
+      const dataRitiroScelta = new Date(nuovaData);
+      dataRitiroScelta.setHours(0, 0, 0, 0);
+
+      if (dataRitiroScelta < dataOrdine) {
+        alert(`La data di ritiro non può essere precedente alla data dell'ordine (${formatDate(ordine.data_ordine)})`);
+        return;
+      }
+    }
+
     try {
-      await ordiniApi.aggiorna(ordineId, { data_ritiro: nuovaData || null });
+      // Se nuovaData è vuota, inviamo null al database
+      const valoreDaSalvare = nuovaData || null;
+      await ordiniApi.aggiorna(ordineId, { data_ritiro: valoreDaSalvare });
+
       setOrdini(ordini.map(o =>
-        o.id === ordineId ? { ...o, data_ritiro: nuovaData || null } : o
+        o.id === ordineId ? { ...o, data_ritiro: valoreDaSalvare } : o
       ));
     } catch (error) {
       console.error('Errore aggiornamento data ritiro:', error);
+      alert('Errore durante il salvataggio della data');
     }
   };
 
@@ -397,12 +417,12 @@ export default function Ordini() {
                           </span>
                         </td>
                         <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                          <div className="relative w-36">
+                          <div className="relative">
                             <input
                               type="date"
                               value={ordine.data_ritiro || ''}
                               onChange={(e) => handleDataRitiroChange(ordine.id, e.target.value, e)}
-                              className={`w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white ${!ordine.data_ritiro ? 'text-transparent' : ''}`}
+                              className={`px-2 py-1.5 text-sm border border-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white ${!ordine.data_ritiro ? 'text-transparent' : ''}`}
                             />
                             {!ordine.data_ritiro && (
                               <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">-</span>
@@ -413,7 +433,7 @@ export default function Ordini() {
                           <select
                             value={ordine.trasportatore_id || ''}
                             onChange={(e) => handleTrasportatoreChange(ordine.id, e.target.value, e)}
-                            className="px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white w-32"
+                            className="px-2 py-1.5 text-sm border border-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white w-32"
                           >
                             <option value="">-</option>
                             {trasportatori.map(t => (
@@ -520,70 +540,89 @@ export default function Ordini() {
           {/* Vista Mobile - Card */}
           <div className="md:hidden space-y-3">
             {ordiniFiltrati.map((ordine) => (
-              <div key={ordine.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-                <div
-                  onClick={() => toggleEspansione(ordine.id)}
-                  className="block p-4 hover:bg-slate-50 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-bold text-slate-900 truncate">
-                          {ordine.cliente_nome}
-                        </h3>
-                        <span className={`flex-shrink-0 px-2 py-0.5 text-xs font-bold rounded-full ${calcolaStato(ordine.data_ritiro) === 'ritirato'
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : 'bg-amber-100 text-amber-700'
-                          }`}>
-                          {calcolaStato(ordine.data_ritiro) === 'ritirato' ? '✓' : '○'}
-                        </span>
-                      </div>
-                      <p className="text-sm text-slate-500">
-                        Ordine #{ordine.id} · {formatDate(ordine.data_ordine)}
-                      </p>
+              <div key={ordine.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                <div className="p-4" onClick={() => toggleEspansione(ordine.id)}>
+
+                  {/* 1a Riga: Cliente - Stato - Tipo */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <h3 className="font-bold text-slate-900 truncate text-lg">
+                        {ordine.cliente_nome}
+                      </h3>
+                      <span className={`flex-shrink-0 px-2 py-0.5 text-xs font-bold rounded-full ${calcolaStato(ordine.data_ritiro) === 'ritirato'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-amber-100 text-amber-700'
+                        }`}>
+                        {calcolaStato(ordine.data_ritiro) === 'ritirato' ? '✓' : '○'}
+                      </span>
+                      <span className={`flex-shrink-0 px-2 py-0.5 rounded-lg text-xs font-bold ${ordine.tipo_ordine === 'pedane'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-purple-100 text-purple-700'
+                        }`}>
+                        {ordine.tipo_ordine === 'pedane' ? 'P' : 'S'}
+                      </span>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <button
-                        onClick={(e) => handleDettaglio(ordine.id, e)}
-                        className="p-2 bg-slate-100 rounded-lg text-slate-600"
-                      >
-                        <ViewIcon size={18} />
+
+                    {/* Tasti Azione Rapidi */}
+                    <div className="flex gap-2 ml-2" onClick={(e) => e.stopPropagation()}>
+                      <button onClick={(e) => handleDettaglio(ordine.id, e)} className="p-2 text-slate-400">
+                        <ViewIcon size={20} />
+                      </button>
+                      <button onClick={(e) => handleElimina(ordine.id, e)} className="p-2 text-red-400">
+                        <Trash2 size={20} />
                       </button>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm">
-                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${ordine.tipo_ordine === 'pedane'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-purple-100 text-purple-700'
-                      }`}>
-                      {ordine.tipo_ordine === 'pedane' ? 'P' : 'S'}
-                    </span>
-                    <span className="font-medium">
-                      {parseFloat(ordine.totale_quintali || 0).toFixed(1)} q
-                    </span>
-                    <span className="text-slate-500">
-                      {formatCurrency(ordine.totale_importo)}
-                    </span>
+                  {/* 2a Riga: Dati Quantità e Prezzo */}
+                  <div className="flex items-baseline gap-4 mb-4 pb-3 border-b border-slate-50">
+                    {ordine.tipo_ordine === 'pedane' && (
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Pedane</span>
+                        <span className="text-lg font-black text-slate-900">
+                          {ordine.righe?.reduce((acc, r) => acc + (parseFloat(r.pedane) || 0), 0) || 0}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Quintali</span>
+                      <span className="text-lg font-black text-slate-900">
+                        {parseFloat(ordine.totale_quintali || 0).toFixed(1)}
+                      </span>
+                    </div>
+                    <div className="flex flex-col ml-auto">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider text-right">Totale</span>
+                      <span className="text-lg font-black text-slate-900">
+                        {formatCurrency(ordine.totale_importo)}
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Campi editabili mobile */}
-                  <div className="flex gap-3 mt-3" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex-1">
-                      <label className="block text-xs text-slate-500 mb-1">Ritiro</label>
+                  {/* 3a Riga: Input Ritiro e Trasportatore */}
+                  <div className="grid grid-cols-2 gap-3" onClick={(e) => e.stopPropagation()}>
+                    <div className="relative">
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 flex justify-between items-center">
+                        Ritiro
+                        {ordine.data_ritiro && (
+                          <button onClick={(e) => handleDataRitiroChange(ordine.id, '', e)} className="text-red-500 lowercase font-medium">
+                            cancella
+                          </button>
+                        )}
+                      </label>
                       <input
                         type="date"
                         value={ordine.data_ritiro || ''}
+                        min={ordine.data_ordine ? ordine.data_ordine.split('T')[0] : ''}
                         onChange={(e) => handleDataRitiroChange(ordine.id, e.target.value, e)}
-                        className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg"
+                        className="w-full px-2 py-2 text-sm border border-slate-200 rounded-xl bg-slate-50 font-medium"
                       />
                     </div>
-                    <div className="flex-1">
-                      <label className="block text-xs text-slate-500 mb-1">Trasportatore</label>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Trasportatore</label>
                       <select
                         value={ordine.trasportatore_id || ''}
                         onChange={(e) => handleTrasportatoreChange(ordine.id, e.target.value, e)}
-                        className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg"
+                        className="w-full px-2 py-2 text-sm border border-slate-200 rounded-xl bg-slate-50 font-medium"
                       >
                         <option value="">-</option>
                         {trasportatori.map(t => (
@@ -594,38 +633,17 @@ export default function Ordini() {
                   </div>
                 </div>
 
+                {/* Dettaglio righe espandibile (Mobile) */}
                 {ordine.righe && ordine.righe.length > 0 && ordiniEspansi.includes(ordine.id) && (
-                  <div className="border-t border-slate-100 bg-slate-50 p-3 space-y-2">
+                  <div className="bg-slate-50 border-t border-slate-100 p-3 space-y-2">
                     {ordine.righe.map((riga) => (
-                      <div key={riga.id} className="bg-white rounded-xl p-3 border border-slate-200">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <p className="font-medium text-slate-900">{riga.prodotto_nome}</p>
-                            <div className="flex items-center gap-2 mt-1 text-sm text-slate-500">
-                              {riga.prodotto_tipologia && (
-                                <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${riga.prodotto_tipologia === '00'
-                                  ? 'bg-amber-100 text-amber-700'
-                                  : riga.prodotto_tipologia === '0'
-                                    ? 'bg-orange-100 text-orange-700'
-                                    : 'bg-slate-100 text-slate-600'
-                                  }`}>
-                                  {riga.prodotto_tipologia}
-                                </span>
-                              )}
-                              <span className="flex items-center gap-1">
-                                <Factory size={12} />
-                                {riga.mulino_nome}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <span className="font-bold text-slate-900">
-                              {riga.prezzo_totale ? `€${parseFloat(riga.prezzo_totale).toFixed(2)}` : '-'}
-                            </span>
-                            <p className="text-xs text-slate-500">
-                              {parseFloat(riga.quintali || 0).toFixed(1)}q @ €{parseFloat(riga.prezzo_quintale || 0).toFixed(2)}
-                            </p>
-                          </div>
+                      <div key={riga.id} className="bg-white rounded-lg p-2 text-sm border border-slate-200">
+                        <div className="flex justify-between font-medium">
+                          <span>{riga.prodotto_nome}</span>
+                          <span>{formatCurrency(riga.prezzo_totale)}</span>
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {riga.mulino_nome} • {parseFloat(riga.quintali).toFixed(1)}q
                         </div>
                       </div>
                     ))}
