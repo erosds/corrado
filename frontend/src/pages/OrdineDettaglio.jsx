@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
-  ArrowLeft, Edit, Trash2, CheckCircle, Clock,
+  ArrowLeft, Edit, Trash2, CheckCircle,
   Calendar, Factory, Package, User, Truck
 } from 'lucide-react';
 import { ordiniApi } from '@/lib/api';
@@ -16,6 +16,16 @@ export default function OrdineDettaglio() {
     caricaOrdine();
   }, [id]);
 
+  // Calcola lo stato automaticamente dalla data di ritiro
+  const calcolaStato = (dataRitiro) => {
+    if (!dataRitiro) return 'inserito';
+    const oggi = new Date();
+    oggi.setHours(0, 0, 0, 0);
+    const ritiro = new Date(dataRitiro);
+    ritiro.setHours(0, 0, 0, 0);
+    return ritiro <= oggi ? 'ritirato' : 'inserito';
+  };
+
   const caricaOrdine = async () => {
     try {
       setLoading(true);
@@ -25,16 +35,6 @@ export default function OrdineDettaglio() {
       console.error('Errore caricamento:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCambiaStato = async (nuovoStato) => {
-    try {
-      await ordiniApi.aggiorna(id, { stato: nuovoStato });
-      caricaOrdine();
-    } catch (error) {
-      console.error('Errore aggiornamento stato:', error);
-      alert('Errore durante l\'aggiornamento');
     }
   };
 
@@ -108,11 +108,11 @@ export default function OrdineDettaglio() {
             <h1 className="text-2xl md:text-3xl font-black tracking-tight">
               Ordine #{ordine.id}
             </h1>
-            <span className={`px-3 py-1 text-sm font-bold rounded-full ${ordine.stato === 'ritirato'
+            <span className={`px-3 py-1 text-sm font-bold rounded-full ${calcolaStato(ordine.data_ritiro) === 'ritirato'
                 ? 'bg-emerald-100 text-emerald-700'
                 : 'bg-amber-100 text-amber-700'
               }`}>
-              {ordine.stato === 'ritirato' ? 'Ritirato' : 'Inserito'}
+              {calcolaStato(ordine.data_ritiro) === 'ritirato' ? 'Ritirato' : 'In attesa'}
             </span>
           </div>
         </div>
@@ -259,30 +259,6 @@ export default function OrdineDettaglio() {
         </div>
       )}
 
-      {/* Azioni */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-5">
-        <h3 className="font-bold text-sm text-slate-400 uppercase tracking-wider mb-4">
-          Azioni
-        </h3>
-
-        {ordine.stato === 'inserito' ? (
-          <button
-            onClick={() => handleCambiaStato('ritirato')}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"
-          >
-            <CheckCircle size={18} />
-            Segna come Ritirato
-          </button>
-        ) : (
-          <button
-            onClick={() => handleCambiaStato('inserito')}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors"
-          >
-            <Clock size={18} />
-            Riporta a Inserito
-          </button>
-        )}
-      </div>
     </div>
   );
 }

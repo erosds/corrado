@@ -40,6 +40,7 @@ class RigaOrdineLista(BaseModel):
     id: int
     prodotto_nome: Optional[str] = None
     prodotto_tipologia: Optional[str] = None
+    mulino_id: Optional[int] = None
     mulino_nome: Optional[str] = None
     quintali: Decimal
 

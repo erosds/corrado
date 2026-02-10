@@ -1,40 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Plus, Search, Package, ChevronRight, Calendar, CheckCircle,
-  Clock, Trash2, Search as ViewIcon, ChevronUp, ChevronDown, Filter, X, Factory
+  Plus, Search, Package, Trash2, Search as ViewIcon, ChevronUp, ChevronDown, X, Factory
 } from 'lucide-react';
-import { ordiniApi, trasportatoriApi } from '@/lib/api';
+import { ordiniApi, trasportatoriApi, muliniApi } from '@/lib/api';
 import DateHeader from '@/components/DateHeader';
 
 export default function Ordini() {
   const navigate = useNavigate();
   const [ordini, setOrdini] = useState([]);
   const [trasportatori, setTrasportatori] = useState([]);
+  const [mulini, setMulini] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtroStato, setFiltroStato] = useState('');
   const [filtroTesto, setFiltroTesto] = useState('');
-  const [showFiltri, setShowFiltri] = useState(false);
   const [ordinamento, setOrdinamento] = useState({ campo: 'data_ordine', direzione: 'desc' });
   const [eliminando, setEliminando] = useState(null);
   const [ordiniEspansi, setOrdiniEspansi] = useState([]); // Array invece di singolo valore
+  const [filtroMulini, setFiltroMulini] = useState([]); // Array di mulino_id selezionati, vuoto = tutti
 
   useEffect(() => {
     caricaDati();
-  }, [filtroStato]);
+  }, []);
+
+  // Calcola lo stato automaticamente dalla data di ritiro
+  const calcolaStato = (dataRitiro) => {
+    if (!dataRitiro) return 'inserito';
+    const oggi = new Date();
+    oggi.setHours(0, 0, 0, 0);
+    const ritiro = new Date(dataRitiro);
+    ritiro.setHours(0, 0, 0, 0);
+    return ritiro <= oggi ? 'ritirato' : 'inserito';
+  };
 
   const caricaDati = async () => {
     try {
       setLoading(true);
-      const params = {};
-      if (filtroStato) params.stato = filtroStato;
 
-      const [ordiniRes, traspRes] = await Promise.all([
-        ordiniApi.lista(params),
-        trasportatoriApi.lista()
+      const [ordiniRes, traspRes, muliniRes] = await Promise.all([
+        ordiniApi.lista(),
+        trasportatoriApi.lista(),
+        muliniApi.lista()
       ]);
       setOrdini(ordiniRes.data);
       setTrasportatori(traspRes.data);
+      setMulini(muliniRes.data);
     } catch (error) {
       console.error('Errore caricamento:', error);
     } finally {
@@ -134,8 +144,21 @@ export default function Ordini() {
       : <ChevronDown size={14} className="inline ml-1" />;
   };
 
+  const toggleFiltroMulino = (mulinoId) => {
+    setFiltroMulini(prev =>
+      prev.includes(mulinoId)
+        ? prev.filter(id => id !== mulinoId)
+        : [...prev, mulinoId]
+    );
+  };
+
   const ordiniFiltrati = ordini
     .filter(o => {
+      if (filtroStato && calcolaStato(o.data_ritiro) !== filtroStato) return false;
+      if (filtroMulini.length > 0) {
+        const muliniOrdine = o.righe?.map(r => r.mulino_id) || [];
+        if (!filtroMulini.some(id => muliniOrdine.includes(id))) return false;
+      }
       if (!filtroTesto) return true;
       const testo = filtroTesto.toLowerCase();
       return (
@@ -157,8 +180,8 @@ export default function Ordini() {
       return (valA - valB) * dir;
     });
 
-  const ordiniInseriti = ordini.filter(o => o.stato === 'inserito').length;
-  const ordiniRitirati = ordini.filter(o => o.stato === 'ritirato').length;
+  const ordiniInseriti = ordini.filter(o => calcolaStato(o.data_ritiro) === 'inserito').length;
+  const ordiniRitirati = ordini.filter(o => calcolaStato(o.data_ritiro) === 'ritirato').length;
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
@@ -180,6 +203,35 @@ export default function Ordini() {
         </Link>
       </div>
 
+      {/* Filtro Mulini */}
+      {mulini.length > 0 && (
+        <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+          <button
+            onClick={() => setFiltroMulini([])}
+            className={`flex-shrink-0 px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 ${filtroMulini.length === 0
+              ? 'bg-slate-900 text-white'
+              : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+          >
+            <Factory size={16} />
+            Tutti i mulini
+          </button>
+          <div className="w-px h-8 bg-slate-200 flex-shrink-0" />
+          {mulini.map(mulino => (
+            <button
+              key={mulino.id}
+              onClick={() => toggleFiltroMulino(mulino.id)}
+              className={`flex-shrink-0 px-4 py-2 rounded-xl font-medium transition-colors ${filtroMulini.includes(mulino.id)
+                ? 'bg-slate-900 text-white'
+                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+            >
+              {mulino.nome}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="flex gap-3 mb-4">
         <div className="flex-1 relative">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -199,45 +251,15 @@ export default function Ordini() {
             </button>
           )}
         </div>
-        <button
-          onClick={() => setShowFiltri(!showFiltri)}
-          className={`px-4 py-3 border rounded-xl flex items-center gap-2 transition-colors ${showFiltri ? 'bg-slate-900 text-white border-slate-900' : 'bg-white border-slate-200 hover:bg-slate-50'
-            }`}
+        <select
+          value={filtroStato}
+          onChange={(e) => setFiltroStato(e.target.value)}
+          className="px-4 py-3 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 font-medium text-slate-700"
         >
-          <Filter size={18} />
-        </button>
-      </div>
-
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        <button
-          onClick={() => setFiltroStato('')}
-          className={`flex-shrink-0 px-4 py-2 rounded-xl font-medium transition-colors ${filtroStato === ''
-            ? 'bg-slate-900 text-white'
-            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
-            }`}
-        >
-          Tutti ({ordini.length})
-        </button>
-        <button
-          onClick={() => setFiltroStato('inserito')}
-          className={`flex-shrink-0 px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 ${filtroStato === 'inserito'
-            ? 'bg-amber-500 text-white'
-            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
-            }`}
-        >
-          <Clock size={16} />
-          In attesa ({ordiniInseriti})
-        </button>
-        <button
-          onClick={() => setFiltroStato('ritirato')}
-          className={`flex-shrink-0 px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 ${filtroStato === 'ritirato'
-            ? 'bg-emerald-500 text-white'
-            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
-            }`}
-        >
-          <CheckCircle size={16} />
-          Ritirati ({ordiniRitirati})
-        </button>
+          <option value="">Tutti gli stati ({ordini.length})</option>
+          <option value="inserito">In attesa ({ordiniInseriti})</option>
+          <option value="ritirato">Ritirati ({ordiniRitirati})</option>
+        </select>
       </div>
 
       {loading ? (
@@ -348,11 +370,11 @@ export default function Ordini() {
                           {formatCurrency(ordine.totale_importo)}
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${ordine.stato === 'ritirato'
+                          <span className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${calcolaStato(ordine.data_ritiro) === 'ritirato'
                             ? 'bg-emerald-100 text-emerald-700'
                             : 'bg-amber-100 text-amber-700'
                             }`}>
-                            {ordine.stato === 'ritirato' ? '✓ Ritirato' : 'In attesa'}
+                            {calcolaStato(ordine.data_ritiro) === 'ritirato' ? '✓' : '○'}
                           </span>
                         </td>
                         <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
@@ -473,11 +495,11 @@ export default function Ordini() {
                         <h3 className="font-bold text-slate-900 truncate">
                           {ordine.cliente_nome}
                         </h3>
-                        <span className={`flex-shrink-0 px-2 py-0.5 text-xs font-bold rounded-full ${ordine.stato === 'ritirato'
+                        <span className={`flex-shrink-0 px-2 py-0.5 text-xs font-bold rounded-full ${calcolaStato(ordine.data_ritiro) === 'ritirato'
                           ? 'bg-emerald-100 text-emerald-700'
                           : 'bg-amber-100 text-amber-700'
                           }`}>
-                          {ordine.stato === 'ritirato' ? '✓' : '○'}
+                          {calcolaStato(ordine.data_ritiro) === 'ritirato' ? '✓' : '○'}
                         </span>
                       </div>
                       <p className="text-sm text-slate-500">

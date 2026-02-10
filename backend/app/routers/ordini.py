@@ -132,6 +132,7 @@ def lista_ordini(
                 "id": riga.id,
                 "prodotto_nome": prodotto.nome if prodotto else None,
                 "prodotto_tipologia": prodotto.tipologia if prodotto else None,
+                "mulino_id": riga.mulino_id,
                 "mulino_nome": mulino.nome if mulino else None,
                 "quintali": riga.quintali
             })

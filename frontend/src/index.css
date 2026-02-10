@@ -1,1 +1,36 @@
 @import "tailwindcss";
+
+/* Reset globale per uniformare tutti gli input */
+input,
+textarea,
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: white;
+  box-shadow: none;
+}
+
+/* Fix specifico per input date, time, number (quelli più problematici) */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 0.5rem; /* rounded-xl come gli altri input */
+}
+input[type="number"],
+input[type="month"],
+input[type="week"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+/* Fix specifico per input search */
+input[type="search"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 0.5rem; /* Come i tuoi altri input rounded-xl */
+}
