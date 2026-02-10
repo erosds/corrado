@@ -104,28 +104,6 @@ export default function Layout() {
       <main className="md:ml-64">
         <Outlet />
       </main>
-
-      {/* Bottom Navigation Mobile */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 md:hidden z-50">
-        <div className="flex justify-around items-center h-16">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.to ||
-              (item.to !== '/' && location.pathname.startsWith(item.to));
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === '/'}
-                className={`flex flex-col items-center justify-center px-3 py-2 transition-colors ${isActive ? 'text-slate-900' : 'text-slate-400'
-                  }`}
-              >
-                <item.icon size={22} strokeWidth={isActive ? 2.5 : 1.5} />
-                <span className="text-[10px] font-bold mt-1">{item.label}</span>
-              </NavLink>
-            );
-          })}
-        </div>
-      </nav>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Plus, Search, Package, ChevronRight, Calendar, CheckCircle, 
-  Clock, Trash2, Edit, ChevronUp, ChevronDown, Filter, X, Factory
+  Clock, Trash2, Search as ViewIcon, ChevronUp, ChevronDown, Filter, X, Factory
 } from 'lucide-react';
 import { ordiniApi } from '@/lib/api';
 import DateHeader from '@/components/DateHeader';
@@ -55,15 +55,13 @@ export default function Ordini() {
     }
   };
 
-  const handleModifica = (id, e) => {
+  const handleDettaglio = (id, e) => {
     e.preventDefault();
     e.stopPropagation();
     navigate(`/ordini/${id}`);
   };
 
-  const toggleEspansione = (id, e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const toggleEspansione = (id) => {
     setOrdineEspanso(ordineEspanso === id ? null : id);
   };
 
@@ -84,7 +82,6 @@ export default function Ordini() {
     }).format(value || 0);
   };
 
-  // Ordinamento
   const handleOrdinamento = (campo) => {
     setOrdinamento(prev => ({
       campo,
@@ -99,7 +96,6 @@ export default function Ordini() {
       : <ChevronDown size={14} className="inline ml-1" />;
   };
 
-  // Filtra e ordina
   const ordiniFiltrati = ordini
     .filter(o => {
       if (!filtroTesto) return true;
@@ -128,10 +124,8 @@ export default function Ordini() {
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
-      {/* Data */}
       <DateHeader />
 
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-black tracking-tight">Ordini</h1>
@@ -148,7 +142,6 @@ export default function Ordini() {
         </Link>
       </div>
 
-      {/* Barra ricerca e filtri */}
       <div className="flex gap-3 mb-4">
         <div className="flex-1 relative">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -178,7 +171,6 @@ export default function Ordini() {
         </button>
       </div>
 
-      {/* Filtri rapidi */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         <button
           onClick={() => setFiltroStato('')}
@@ -214,7 +206,6 @@ export default function Ordini() {
         </button>
       </div>
 
-      {/* Tabella Ordini */}
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -238,13 +229,11 @@ export default function Ordini() {
         </div>
       ) : (
         <>
-          {/* Vista Desktop - Tabella */}
           <div className="hidden md:block bg-white rounded-2xl border border-slate-100 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-slate-50 border-b border-slate-100">
                   <tr>
-                    <th className="w-10 px-2 py-3"></th>
                     <th 
                       className="text-left px-4 py-3 text-sm font-semibold text-slate-600 cursor-pointer hover:bg-slate-100"
                       onClick={() => handleOrdinamento('id')}
@@ -297,26 +286,9 @@ export default function Ordini() {
                     <>
                       <tr 
                         key={ordine.id} 
-                        className={`hover:bg-slate-50 cursor-pointer ${ordineEspanso === ordine.id ? 'bg-slate-50' : ''}`}
-                        onClick={() => navigate(`/ordini/${ordine.id}`)}
+                        className={`hover:bg-slate-50 cursor-pointer transition-colors ${ordineEspanso === ordine.id ? 'bg-slate-50' : ''}`}
+                        onClick={() => toggleEspansione(ordine.id)}
                       >
-                        <td className="px-2 py-3">
-                          <button
-                            onClick={(e) => toggleEspansione(ordine.id, e)}
-                            className={`p-1 rounded-lg transition-colors ${
-                              ordineEspanso === ordine.id 
-                                ? 'bg-slate-200 text-slate-700' 
-                                : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
-                            }`}
-                            title={ordineEspanso === ordine.id ? 'Chiudi dettagli' : 'Mostra prodotti'}
-                          >
-                            {ordineEspanso === ordine.id ? (
-                              <ChevronUp size={16} />
-                            ) : (
-                              <ChevronDown size={16} />
-                            )}
-                          </button>
-                        </td>
                         <td className="px-4 py-3 text-sm font-medium">#{ordine.id}</td>
                         <td className="px-4 py-3">
                           <p className="font-medium text-slate-900">{ordine.cliente_nome}</p>
@@ -354,11 +326,11 @@ export default function Ordini() {
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-center gap-1">
                             <button
-                              onClick={(e) => handleModifica(ordine.id, e)}
+                              onClick={(e) => handleDettaglio(ordine.id, e)}
                               className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="Modifica"
+                              title="Vedi Dettaglio"
                             >
-                              <Edit size={16} />
+                              <ViewIcon size={18} />
                             </button>
                             <button
                               onClick={(e) => handleElimina(ordine.id, e)}
@@ -366,17 +338,16 @@ export default function Ordini() {
                               className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                               title="Elimina"
                             >
-                              <Trash2 size={16} />
+                              <Trash2 size={18} />
                             </button>
                           </div>
                         </td>
                       </tr>
                       
-                      {/* Righe espanse con prodotti */}
                       {ordineEspanso === ordine.id && ordine.righe && ordine.righe.length > 0 && (
                         <tr key={`${ordine.id}-righe`} className="bg-slate-50">
-                          <td colSpan={10} className="px-4 py-3">
-                            <div className="ml-8 bg-white rounded-xl border border-slate-200 overflow-hidden">
+                          <td colSpan={9} className="px-4 py-3">
+                            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                               <table className="w-full">
                                 <thead className="bg-slate-100">
                                   <tr>
@@ -437,13 +408,12 @@ export default function Ordini() {
             </div>
           </div>
 
-          {/* Vista Mobile - Card */}
           <div className="md:hidden space-y-3">
             {ordiniFiltrati.map((ordine) => (
               <div key={ordine.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-                <Link
-                  to={`/ordini/${ordine.id}`}
-                  className="block p-4 hover:bg-slate-50 transition-colors"
+                <div
+                  onClick={() => toggleEspansione(ordine.id)}
+                  className="block p-4 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
@@ -463,7 +433,14 @@ export default function Ordini() {
                         Ordine #{ordine.id} · {formatDate(ordine.data_ordine)}
                       </p>
                     </div>
-                    <ChevronRight size={20} className="text-slate-300 flex-shrink-0 mt-1" />
+                    <div className="flex flex-col gap-2">
+                      <button 
+                        onClick={(e) => handleDettaglio(ordine.id, e)}
+                        className="p-2 bg-slate-100 rounded-lg text-slate-600"
+                      >
+                        <ViewIcon size={18} />
+                      </button>
+                    </div>
                   </div>
                   
                   <div className="flex items-center gap-4 text-sm">
@@ -481,54 +458,40 @@ export default function Ordini() {
                       {formatCurrency(ordine.totale_importo)}
                     </span>
                   </div>
-                </Link>
+                </div>
 
-                {/* Pulsante espandi prodotti mobile */}
-                {ordine.righe && ordine.righe.length > 0 && (
-                  <>
-                    <button
-                      onClick={(e) => toggleEspansione(ordine.id, e)}
-                      className="w-full px-4 py-2 bg-slate-50 border-t border-slate-100 flex items-center justify-center gap-2 text-sm text-slate-600 hover:bg-slate-100 transition-colors"
-                    >
-                      <Package size={14} />
-                      {ordineEspanso === ordine.id ? 'Nascondi' : 'Mostra'} {ordine.righe.length} prodott{ordine.righe.length === 1 ? 'o' : 'i'}
-                      {ordineEspanso === ordine.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </button>
-
-                    {ordineEspanso === ordine.id && (
-                      <div className="border-t border-slate-100 bg-slate-50 p-3 space-y-2">
-                        {ordine.righe.map((riga) => (
-                          <div key={riga.id} className="bg-white rounded-xl p-3 border border-slate-200">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <p className="font-medium text-slate-900">{riga.prodotto_nome}</p>
-                                <div className="flex items-center gap-2 mt-1 text-sm text-slate-500">
-                                  {riga.prodotto_tipologia && (
-                                    <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${
-                                      riga.prodotto_tipologia === '00' 
-                                        ? 'bg-amber-100 text-amber-700'
-                                        : riga.prodotto_tipologia === '0'
-                                        ? 'bg-orange-100 text-orange-700'
-                                        : 'bg-slate-100 text-slate-600'
-                                    }`}>
-                                      {riga.prodotto_tipologia}
-                                    </span>
-                                  )}
-                                  <span className="flex items-center gap-1">
-                                    <Factory size={12} />
-                                    {riga.mulino_nome}
-                                  </span>
-                                </div>
-                              </div>
-                              <span className="font-bold text-slate-900">
-                                {parseFloat(riga.quintali || 0).toFixed(1)} q
+                {ordine.righe && ordine.righe.length > 0 && ordineEspanso === ordine.id && (
+                  <div className="border-t border-slate-100 bg-slate-50 p-3 space-y-2">
+                    {ordine.righe.map((riga) => (
+                      <div key={riga.id} className="bg-white rounded-xl p-3 border border-slate-200">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="font-medium text-slate-900">{riga.prodotto_nome}</p>
+                            <div className="flex items-center gap-2 mt-1 text-sm text-slate-500">
+                              {riga.prodotto_tipologia && (
+                                <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${
+                                  riga.prodotto_tipologia === '00' 
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : riga.prodotto_tipologia === '0'
+                                    ? 'bg-orange-100 text-orange-700'
+                                    : 'bg-slate-100 text-slate-600'
+                                }`}>
+                                  {riga.prodotto_tipologia}
+                                </span>
+                              )}
+                              <span className="flex items-center gap-1">
+                                <Factory size={12} />
+                                {riga.mulino_nome}
                               </span>
                             </div>
                           </div>
-                        ))}
+                          <span className="font-bold text-slate-900">
+                            {parseFloat(riga.quintali || 0).toFixed(1)} q
+                          </span>
+                        </div>
                       </div>
-                    )}
-                  </>
+                    ))}
+                  </div>
                 )}
               </div>
             ))}

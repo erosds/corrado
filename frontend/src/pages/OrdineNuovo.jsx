@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { 
+import {
   ArrowLeft, Package, Trash2, Factory, ChevronDown, ChevronUp,
   Plus, X, Search, AlertCircle
 } from 'lucide-react';
@@ -17,7 +17,7 @@ export default function OrdineNuovo() {
   const [mulini, setMulini] = useState([]);
   const [trasportatori, setTrasportatori] = useState([]);
   const [prodottiPerMulino, setProdottiPerMulino] = useState({});
-  
+
   // Form
   const [formData, setFormData] = useState({
     cliente_id: clienteIdParam || '',
@@ -97,7 +97,7 @@ export default function OrdineNuovo() {
   };
 
   // === CLIENTE AUTOCOMPLETE ===
-  const clientiFiltrati = clienti.filter(c => 
+  const clientiFiltrati = clienti.filter(c =>
     c.nome.toLowerCase().includes(clienteSearch.toLowerCase())
   );
 
@@ -112,7 +112,7 @@ export default function OrdineNuovo() {
     const value = e.target.value;
     setClienteSearch(value);
     setShowClienteDropdown(true);
-    
+
     // Reset selezione se si modifica il testo
     if (clienteSelezionato && clienteSelezionato.nome !== value) {
       setClienteSelezionato(null);
@@ -123,7 +123,7 @@ export default function OrdineNuovo() {
   // === VALIDAZIONE DATE ===
   const validaDate = (campo, valore) => {
     const errori = { ...erroriDate };
-    
+
     if (campo === 'data_ritiro' && valore && formData.data_ordine) {
       if (new Date(valore) < new Date(formData.data_ordine)) {
         errori.data_ritiro = 'La data ritiro deve essere uguale o successiva alla data ordine';
@@ -131,7 +131,7 @@ export default function OrdineNuovo() {
         delete errori.data_ritiro;
       }
     }
-    
+
     if (campo === 'data_ordine' && formData.data_ritiro) {
       if (new Date(formData.data_ritiro) < new Date(valore)) {
         errori.data_ritiro = 'La data ritiro deve essere uguale o successiva alla data ordine';
@@ -139,7 +139,7 @@ export default function OrdineNuovo() {
         delete errori.data_ritiro;
       }
     }
-    
+
     setErroriDate(errori);
     return Object.keys(errori).length === 0;
   };
@@ -147,7 +147,7 @@ export default function OrdineNuovo() {
   const handleDataChange = (campo, valore) => {
     setFormData(prev => ({ ...prev, [campo]: valore }));
     validaDate(campo, valore);
-    
+
     // Calcola data incasso RIBA
     if (campo === 'data_ritiro' && clienteSelezionato?.riba && valore) {
       const dataRitiro = new Date(valore);
@@ -156,8 +156,8 @@ export default function OrdineNuovo() {
       // +60 giorni
       const dataIncasso = new Date(fineMese);
       dataIncasso.setDate(dataIncasso.getDate() + 60);
-      setFormData(prev => ({ 
-        ...prev, 
+      setFormData(prev => ({
+        ...prev,
         data_ritiro: valore,
         data_incasso_mulino: dataIncasso.toISOString().split('T')[0]
       }));
@@ -211,7 +211,7 @@ export default function OrdineNuovo() {
 
   const handleSelezionaProdotto = async (prodotto) => {
     setProdottoSelezionato(prodotto);
-    
+
     // Carica ultimo prezzo se cliente selezionato
     if (clienteSelezionato) {
       try {
@@ -227,18 +227,18 @@ export default function OrdineNuovo() {
 
   const aggiungiProdottoAllaLista = () => {
     if (!prodottoSelezionato) return;
-    
+
     const mulino = mulini.find(m => m.id === parseInt(mulinoModalSelezionato));
     const pedane = parseFloat(quantitaModal.pedane) || 0;
     const quintaliBase = parseFloat(quantitaModal.quintali) || 0;
     const prezzo = parseFloat(quantitaModal.prezzo) || 0;
-    
+
     // Calcola quintali
     let quintali = quintaliBase;
     if (formData.tipo_ordine === 'pedane' && pedane > 0 && clienteSelezionato?.pedana_standard) {
       quintali = pedane * parseFloat(clienteSelezionato.pedana_standard);
     }
-    
+
     const nuovaRiga = {
       id: Date.now(),
       prodotto_id: prodottoSelezionato.id,
@@ -251,9 +251,9 @@ export default function OrdineNuovo() {
       prezzo_quintale: prezzo,
       prezzo_totale: quintali * prezzo,
     };
-    
+
     setRighe(prev => [...prev, nuovaRiga]);
-    
+
     // Reset per aggiungere altro prodotto
     setProdottoSelezionato(null);
     setQuantitaModal({ pedane: '', quintali: '', prezzo: '' });
@@ -266,21 +266,21 @@ export default function OrdineNuovo() {
   const aggiornaRiga = (rigaId, campo, valore) => {
     setRighe(righe.map(riga => {
       if (riga.id !== rigaId) return riga;
-      
+
       const nuovaRiga = { ...riga, [campo]: valore };
-      
+
       // Ricalcola quintali se cambiano pedane
       if (campo === 'pedane' && formData.tipo_ordine === 'pedane' && clienteSelezionato?.pedana_standard) {
         nuovaRiga.quintali = parseFloat(valore || 0) * parseFloat(clienteSelezionato.pedana_standard);
       }
-      
+
       // Ricalcola totale
       if (campo === 'pedane' || campo === 'quintali' || campo === 'prezzo_quintale') {
         const quintali = campo === 'quintali' ? parseFloat(valore || 0) : nuovaRiga.quintali;
         const prezzo = campo === 'prezzo_quintale' ? parseFloat(valore || 0) : nuovaRiga.prezzo_quintale;
         nuovaRiga.prezzo_totale = quintali * prezzo;
       }
-      
+
       return nuovaRiga;
     }));
   };
@@ -295,17 +295,17 @@ export default function OrdineNuovo() {
   // === SUBMIT ===
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.cliente_id) {
       alert('Seleziona un cliente');
       return;
     }
-    
+
     if (righe.length === 0) {
       alert('Aggiungi almeno un prodotto');
       return;
     }
-    
+
     if (Object.keys(erroriDate).length > 0) {
       alert('Correggi gli errori nelle date');
       return;
@@ -407,7 +407,7 @@ export default function OrdineNuovo() {
                     </button>
                   )}
                 </div>
-                
+
                 {/* Dropdown clienti */}
                 {showClienteDropdown && !clienteSelezionato && clientiFiltrati.length > 0 && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
@@ -546,33 +546,9 @@ export default function OrdineNuovo() {
 
         {/* Sezione Prodotti */}
         <div className="bg-white rounded-2xl border border-slate-100 p-5 mb-4">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h3 className="font-bold">Prodotti</h3>
-              <div className="flex gap-1">
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, tipo_ordine: 'pedane' })}
-                  className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
-                    formData.tipo_ordine === 'pedane'
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                  }`}
-                >
-                  Pedane
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, tipo_ordine: 'sfuso' })}
-                  className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
-                    formData.tipo_ordine === 'sfuso'
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                  }`}
-                >
-                  Sfuso
-                </button>
-              </div>
             </div>
             <button
               type="button"
@@ -582,6 +558,28 @@ export default function OrdineNuovo() {
             >
               <Plus size={18} />
               Aggiungi
+            </button>
+          </div>
+          <div className="flex gap-1 mb-3">
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, tipo_ordine: 'pedane' })}
+              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${formData.tipo_ordine === 'pedane'
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                }`}
+            >
+              Pedane
+            </button>
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, tipo_ordine: 'sfuso' })}
+              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${formData.tipo_ordine === 'sfuso'
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                }`}
+            >
+              Sfuso
             </button>
           </div>
 
@@ -656,7 +654,7 @@ export default function OrdineNuovo() {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="mt-2 text-right">
                     <span className="text-sm text-slate-500">Totale: </span>
                     <span className="font-bold">
@@ -818,11 +816,10 @@ export default function OrdineNuovo() {
                         key={prod.id}
                         type="button"
                         onClick={() => handleSelezionaProdotto(prod)}
-                        className={`p-3 text-left rounded-xl transition-colors ${
-                          prodottoSelezionato?.id === prod.id
+                        className={`p-3 text-left rounded-xl transition-colors ${prodottoSelezionato?.id === prod.id
                             ? 'bg-slate-900 text-white'
                             : 'bg-slate-50 hover:bg-slate-100'
-                        }`}
+                          }`}
                       >
                         <p className="font-medium text-sm truncate">{prod.nome}</p>
                         {prod.tipologia && (
@@ -841,7 +838,7 @@ export default function OrdineNuovo() {
                         {prodottoSelezionato.nome}
                         {prodottoSelezionato.tipologia && ` (Tipo ${prodottoSelezionato.tipologia})`}
                       </p>
-                      
+
                       <div className="grid grid-cols-3 gap-3 mb-3">
                         {formData.tipo_ordine === 'pedane' && (
                           <div>
@@ -852,11 +849,11 @@ export default function OrdineNuovo() {
                               value={quantitaModal.pedane}
                               onChange={(e) => {
                                 const pedane = parseFloat(e.target.value) || 0;
-                                const quintali = clienteSelezionato?.pedana_standard 
+                                const quintali = clienteSelezionato?.pedana_standard
                                   ? pedane * parseFloat(clienteSelezionato.pedana_standard)
                                   : '';
-                                setQuantitaModal(prev => ({ 
-                                  ...prev, 
+                                setQuantitaModal(prev => ({
+                                  ...prev,
                                   pedane: e.target.value,
                                   quintali: quintali.toString()
                                 }));
@@ -890,7 +887,7 @@ export default function OrdineNuovo() {
                           />
                         </div>
                       </div>
-                      
+
                       <button
                         type="button"
                         onClick={aggiungiProdottoAllaLista}

@@ -118,12 +118,22 @@ export default function OrdineDettaglio() {
           </div>
         </div>
         
-        <button
-          onClick={handleDelete}
-          className="p-2.5 bg-white border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors"
-        >
-          <Trash2 size={18} />
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            to={`/ordini/${ordine.id}`}
+            className="p-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors"
+            title="Modifica ordine"
+          >
+            <Edit size={18} />
+          </Link>
+          <button
+            onClick={handleDelete}
+            className="p-2.5 bg-white border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors"
+            title="Elimina ordine"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
       </div>
 
       {/* Card Riepilogo */}

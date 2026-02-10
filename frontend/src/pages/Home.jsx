@@ -103,13 +103,10 @@ export default function Home() {
       </div>
 
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-1">
+      <div className="mb-5">
+        <h1 className="text-3xl md:text-4xl font-black tracking-tight">
           Home
         </h1>
-        <p className="text-slate-500">
-          Benvenuto, Corrado
-        </p>
       </div>
 
       {/* Alert Carichi Aperti */}
