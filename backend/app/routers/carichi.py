@@ -76,7 +76,7 @@ def lista_carichi(
 @router.get("/aperti", response_model=List[CaricoList])
 def lista_carichi_aperti(db: Session = Depends(get_db)):
     """Lista solo carichi aperti - utile per vista rapida da mobile"""
-    return lista_carichi(solo_aperti=True, db=db)
+    return lista_carichi(stato=None, tipo_carico=None, solo_aperti=True, db=db)
 
 
 @router.get("/{carico_id}", response_model=CaricoDettaglio)

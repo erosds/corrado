@@ -47,6 +47,7 @@ class ClienteList(BaseModel):
     nome: str
     cellulare: Optional[str] = None
     riba: bool
+    pedana_standard: Optional[str] = None  # Necessario per calcolo quintali in OrdineNuovo
 
     class Config:
         from_attributes = True

@@ -230,6 +230,11 @@ export default function OrdineNuovo() {
                     ⓘ Cliente RIBA - data incasso calcolata automaticamente
                   </p>
                 )}
+                {clienteSelezionato?.pedana_standard && formData.tipo_ordine === 'pedane' && (
+                  <p className="mt-1 text-sm text-emerald-600">
+                    ⓘ Pedana standard: {clienteSelezionato.pedana_standard} quintali — i quintali verranno calcolati automaticamente
+                  </p>
+                )}
               </div>
 
               {/* Date e Tipo */}
@@ -396,7 +401,9 @@ export default function OrdineNuovo() {
                   <div className="grid grid-cols-3 gap-3">
                     {formData.tipo_ordine === 'pedane' && (
                       <div>
-                        <label className="block text-xs text-slate-500 mb-1">Pedane</label>
+                        <label className="block text-xs text-slate-500 mb-1">
+                          Pedane{clienteSelezionato?.pedana_standard ? ` (${clienteSelezionato.pedana_standard} q/ped)` : ''}
+                        </label>
                         <input
                           type="number"
                           step="0.5"
