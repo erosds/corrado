@@ -237,7 +237,7 @@ function FormCarico({ onClose, onSaved }) {
 
   useEffect(() => {
     // Carica trasportatori
-    fetch('/api/trasportatori')
+    fetch('/api/trasportatori/')
       .then(r => r.json())
       .then(data => setTrasportatori(data))
       .catch(console.error);
