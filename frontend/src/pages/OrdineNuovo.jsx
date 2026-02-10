@@ -47,7 +47,7 @@ export default function OrdineNuovo() {
       const [clientiRes, muliniRes, traspRes] = await Promise.all([
         clientiApi.lista(),
         muliniApi.lista(),
-        fetch('/api/trasportatori').then(r => r.json()),
+        fetch('/api/trasportatori/').then(r => r.json()),
       ]);
       setClienti(clientiRes.data);
       setMulini(muliniRes.data);

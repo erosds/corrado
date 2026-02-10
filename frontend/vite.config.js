@@ -15,10 +15,12 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    host: true, // <--- FONDAMENTALE: permette l'accesso dalla rete locale
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true
+        target: 'http://127.0.0.1:8000', // Usa l'IP locale del backend
+        changeOrigin: true,
+        secure: false,
       }
     }
   }
