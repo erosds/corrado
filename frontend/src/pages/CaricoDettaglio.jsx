@@ -193,7 +193,7 @@ export default function CaricoDettaglio() {
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-2 text-slate-600">
               <Calendar size={16} />
-              Data carico
+              Data ritiro carico
             </span>
             <span className="font-medium">{formatDate(carico.data_carico)}</span>
           </div>

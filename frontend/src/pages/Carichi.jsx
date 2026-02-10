@@ -595,7 +595,7 @@ function FormCarico({ carico, onClose, onSaved }) {
           {/* Data Carico */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Data carico
+              Data ritiro carico
             </label>
             <input
               type="date"
