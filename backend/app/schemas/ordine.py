@@ -31,6 +31,20 @@ class RigaOrdineDettaglio(RigaOrdineRead):
     prodotto_nome: Optional[str] = None
     prodotto_tipologia: Optional[str] = None  # Tipo farina (0, 00, altro)
     mulino_nome: Optional[str] = None
+    mulino_indirizzo: Optional[str] = None  # Indirizzo ritiro mulino
+
+
+# --- Schema leggero per righe nella lista ordini ---
+class RigaOrdineLista(BaseModel):
+    """Riga leggera per visualizzazione in lista ordini"""
+    id: int
+    prodotto_nome: Optional[str] = None
+    prodotto_tipologia: Optional[str] = None
+    mulino_nome: Optional[str] = None
+    quintali: Decimal
+
+    class Config:
+        from_attributes = True
 
 
 # --- Ordine ---
@@ -73,17 +87,18 @@ class OrdineRead(OrdineBase):
 
 
 class OrdineList(BaseModel):
-    """Schema leggero per liste ordini"""
+    """Schema per liste ordini con righe"""
     id: int
     cliente_id: int
     cliente_nome: Optional[str] = None
     data_ordine: date
     data_ritiro: Optional[date] = None
-    data_incasso_mulino: Optional[date] = None  # Aggiunto per mostrare in tabella
+    data_incasso_mulino: Optional[date] = None
     tipo_ordine: str
     stato: str
     totale_quintali: Optional[Decimal] = None
     totale_importo: Optional[Decimal] = None
+    righe: List[RigaOrdineLista] = []  # Righe con dettagli prodotto/mulino
 
     class Config:
         from_attributes = True

@@ -88,7 +88,7 @@ def lista_ordini(
     limit: int = 100,
     db: Session = Depends(get_db)
 ):
-    """Lista ordini con filtri"""
+    """Lista ordini con filtri e righe dettagliate"""
     query = db.query(
         Ordine.id,
         Ordine.cliente_id,
@@ -114,13 +114,27 @@ def lista_ordini(
     
     ordini = query.order_by(desc(Ordine.data_ordine)).offset(skip).limit(limit).all()
     
-    # Calcola totali per ogni ordine
+    # Calcola totali e righe per ogni ordine
     risultati = []
     for o in ordini:
         totali = db.query(
             func.sum(RigaOrdine.quintali).label("totale_quintali"),
             func.sum(RigaOrdine.prezzo_totale).label("totale_importo")
         ).filter(RigaOrdine.ordine_id == o.id).first()
+        
+        # Recupera righe con dettagli prodotto e mulino
+        righe_db = db.query(RigaOrdine).filter(RigaOrdine.ordine_id == o.id).all()
+        righe_lista = []
+        for riga in righe_db:
+            prodotto = db.query(Prodotto).filter(Prodotto.id == riga.prodotto_id).first()
+            mulino = db.query(Mulino).filter(Mulino.id == riga.mulino_id).first()
+            righe_lista.append({
+                "id": riga.id,
+                "prodotto_nome": prodotto.nome if prodotto else None,
+                "prodotto_tipologia": prodotto.tipologia if prodotto else None,
+                "mulino_nome": mulino.nome if mulino else None,
+                "quintali": riga.quintali
+            })
         
         risultati.append({
             "id": o.id,
@@ -132,7 +146,8 @@ def lista_ordini(
             "tipo_ordine": o.tipo_ordine,
             "stato": o.stato,
             "totale_quintali": totali.totale_quintali or Decimal("0"),
-            "totale_importo": totali.totale_importo or Decimal("0")
+            "totale_importo": totali.totale_importo or Decimal("0"),
+            "righe": righe_lista
         })
     
     return risultati
@@ -144,7 +159,7 @@ def lista_ordini(
 
 @router.get("/{ordine_id}", response_model=OrdineDettaglio)
 def get_ordine(ordine_id: int, db: Session = Depends(get_db)):
-    """Dettaglio singolo ordine con tutte le righe"""
+    """Dettaglio singolo ordine con tutte le righe e indirizzi"""
     ordine = db.query(Ordine).options(
         joinedload(Ordine.righe),
         joinedload(Ordine.cliente),
@@ -154,7 +169,7 @@ def get_ordine(ordine_id: int, db: Session = Depends(get_db)):
     if not ordine:
         raise HTTPException(status_code=404, detail="Ordine non trovato")
     
-    # Costruisci risposta con dettagli
+    # Costruisci risposta con dettagli incluso indirizzo mulino
     righe_dettaglio = []
     for riga in ordine.righe:
         prodotto = db.query(Prodotto).filter(Prodotto.id == riga.prodotto_id).first()
@@ -169,7 +184,8 @@ def get_ordine(ordine_id: int, db: Session = Depends(get_db)):
             "prezzo_totale": riga.prezzo_totale,
             "prodotto_nome": prodotto.nome if prodotto else None,
             "prodotto_tipologia": prodotto.tipologia if prodotto else None,
-            "mulino_nome": mulino.nome if mulino else None
+            "mulino_nome": mulino.nome if mulino else None,
+            "mulino_indirizzo": mulino.indirizzo_ritiro if mulino else None
         })
     
     return {

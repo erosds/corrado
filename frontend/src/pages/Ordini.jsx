@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Plus, Search, Package, ChevronRight, Calendar, CheckCircle, 
-  Clock, Trash2, Edit, ChevronUp, ChevronDown, Filter, X
+  Clock, Trash2, Edit, ChevronUp, ChevronDown, Filter, X, Factory
 } from 'lucide-react';
 import { ordiniApi } from '@/lib/api';
 import DateHeader from '@/components/DateHeader';
@@ -16,6 +16,7 @@ export default function Ordini() {
   const [showFiltri, setShowFiltri] = useState(false);
   const [ordinamento, setOrdinamento] = useState({ campo: 'data_ordine', direzione: 'desc' });
   const [eliminando, setEliminando] = useState(null);
+  const [ordineEspanso, setOrdineEspanso] = useState(null);
 
   useEffect(() => {
     caricaOrdini();
@@ -57,7 +58,13 @@ export default function Ordini() {
   const handleModifica = (id, e) => {
     e.preventDefault();
     e.stopPropagation();
-    navigate(`/ordini/${id}/modifica`);
+    navigate(`/ordini/${id}`);
+  };
+
+  const toggleEspansione = (id, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setOrdineEspanso(ordineEspanso === id ? null : id);
   };
 
   const formatDate = (dateStr) => {
@@ -237,6 +244,7 @@ export default function Ordini() {
               <table className="w-full">
                 <thead className="bg-slate-50 border-b border-slate-100">
                   <tr>
+                    <th className="w-10 px-2 py-3"></th>
                     <th 
                       className="text-left px-4 py-3 text-sm font-semibold text-slate-600 cursor-pointer hover:bg-slate-100"
                       onClick={() => handleOrdinamento('id')}
@@ -261,11 +269,8 @@ export default function Ordini() {
                     >
                       Data Ritiro <IconaOrdinamento campo="data_ritiro" />
                     </th>
-                    <th 
-                      className="text-left px-4 py-3 text-sm font-semibold text-slate-600 cursor-pointer hover:bg-slate-100"
-                      onClick={() => handleOrdinamento('tipo_ordine')}
-                    >
-                      Tipo <IconaOrdinamento campo="tipo_ordine" />
+                    <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">
+                      Tipo
                     </th>
                     <th 
                       className="text-right px-4 py-3 text-sm font-semibold text-slate-600 cursor-pointer hover:bg-slate-100"
@@ -289,65 +294,143 @@ export default function Ordini() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {ordiniFiltrati.map((ordine) => (
-                    <tr 
-                      key={ordine.id} 
-                      className="hover:bg-slate-50 cursor-pointer"
-                      onClick={() => navigate(`/ordini/${ordine.id}`)}
-                    >
-                      <td className="px-4 py-3 text-sm font-medium">#{ordine.id}</td>
-                      <td className="px-4 py-3">
-                        <p className="font-medium text-slate-900">{ordine.cliente_nome}</p>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
-                        {formatDate(ordine.data_ordine)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
-                        {formatDate(ordine.data_ritiro)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-lg ${
-                          ordine.tipo_ordine === 'pedane' 
-                            ? 'bg-blue-100 text-blue-700' 
-                            : 'bg-purple-100 text-purple-700'
-                        }`}>
-                          {ordine.tipo_ordine}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right font-medium">
-                        {parseFloat(ordine.totale_quintali || 0).toFixed(1)} q
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right font-medium">
-                        {formatCurrency(ordine.totale_importo)}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${
-                          ordine.stato === 'ritirato' 
-                            ? 'bg-emerald-100 text-emerald-700' 
-                            : 'bg-amber-100 text-amber-700'
-                        }`}>
-                          {ordine.stato === 'ritirato' ? '✓ Ritirato' : 'In attesa'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-1">
+                    <>
+                      <tr 
+                        key={ordine.id} 
+                        className={`hover:bg-slate-50 cursor-pointer ${ordineEspanso === ordine.id ? 'bg-slate-50' : ''}`}
+                        onClick={() => navigate(`/ordini/${ordine.id}`)}
+                      >
+                        <td className="px-2 py-3">
                           <button
-                            onClick={(e) => handleModifica(ordine.id, e)}
-                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Modifica"
+                            onClick={(e) => toggleEspansione(ordine.id, e)}
+                            className={`p-1 rounded-lg transition-colors ${
+                              ordineEspanso === ordine.id 
+                                ? 'bg-slate-200 text-slate-700' 
+                                : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
+                            }`}
+                            title={ordineEspanso === ordine.id ? 'Chiudi dettagli' : 'Mostra prodotti'}
                           >
-                            <Edit size={16} />
+                            {ordineEspanso === ordine.id ? (
+                              <ChevronUp size={16} />
+                            ) : (
+                              <ChevronDown size={16} />
+                            )}
                           </button>
-                          <button
-                            onClick={(e) => handleElimina(ordine.id, e)}
-                            disabled={eliminando === ordine.id}
-                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                            title="Elimina"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                        </td>
+                        <td className="px-4 py-3 text-sm font-medium">#{ordine.id}</td>
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-slate-900">{ordine.cliente_nome}</p>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600">
+                          {formatDate(ordine.data_ordine)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600">
+                          {formatDate(ordine.data_ritiro)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-lg ${
+                            ordine.tipo_ordine === 'pedane' 
+                              ? 'bg-blue-100 text-blue-700' 
+                              : 'bg-purple-100 text-purple-700'
+                          }`}>
+                            {ordine.tipo_ordine}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-right font-medium">
+                          {parseFloat(ordine.totale_quintali || 0).toFixed(1)} q
+                        </td>
+                        <td className="px-4 py-3 text-sm text-right font-medium">
+                          {formatCurrency(ordine.totale_importo)}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${
+                            ordine.stato === 'ritirato' 
+                              ? 'bg-emerald-100 text-emerald-700' 
+                              : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {ordine.stato === 'ritirato' ? '✓ Ritirato' : 'In attesa'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={(e) => handleModifica(ordine.id, e)}
+                              className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Modifica"
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button
+                              onClick={(e) => handleElimina(ordine.id, e)}
+                              disabled={eliminando === ordine.id}
+                              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                              title="Elimina"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      
+                      {/* Righe espanse con prodotti */}
+                      {ordineEspanso === ordine.id && ordine.righe && ordine.righe.length > 0 && (
+                        <tr key={`${ordine.id}-righe`} className="bg-slate-50">
+                          <td colSpan={10} className="px-4 py-3">
+                            <div className="ml-8 bg-white rounded-xl border border-slate-200 overflow-hidden">
+                              <table className="w-full">
+                                <thead className="bg-slate-100">
+                                  <tr>
+                                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">
+                                      Prodotto
+                                    </th>
+                                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">
+                                      Tipologia
+                                    </th>
+                                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">
+                                      Mulino
+                                    </th>
+                                    <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">
+                                      Quintali
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                  {ordine.righe.map((riga) => (
+                                    <tr key={riga.id} className="text-sm">
+                                      <td className="px-4 py-2.5 font-medium text-slate-900">
+                                        {riga.prodotto_nome || '-'}
+                                      </td>
+                                      <td className="px-4 py-2.5 text-slate-600">
+                                        {riga.prodotto_tipologia ? (
+                                          <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${
+                                            riga.prodotto_tipologia === '00' 
+                                              ? 'bg-amber-100 text-amber-700'
+                                              : riga.prodotto_tipologia === '0'
+                                              ? 'bg-orange-100 text-orange-700'
+                                              : 'bg-slate-100 text-slate-600'
+                                          }`}>
+                                            {riga.prodotto_tipologia}
+                                          </span>
+                                        ) : '-'}
+                                      </td>
+                                      <td className="px-4 py-2.5">
+                                        <div className="flex items-center gap-2">
+                                          <Factory size={14} className="text-slate-400" />
+                                          <span className="text-slate-700">{riga.mulino_nome || '-'}</span>
+                                        </div>
+                                      </td>
+                                      <td className="px-4 py-2.5 text-right font-medium text-slate-900">
+                                        {parseFloat(riga.quintali || 0).toFixed(1)} q
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
                   ))}
                 </tbody>
               </table>
@@ -357,60 +440,97 @@ export default function Ordini() {
           {/* Vista Mobile - Card */}
           <div className="md:hidden space-y-3">
             {ordiniFiltrati.map((ordine) => (
-              <Link
-                key={ordine.id}
-                to={`/ordini/${ordine.id}`}
-                className="block bg-white rounded-2xl p-4 border border-slate-100 hover:border-slate-300 hover:shadow-md transition-all"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-slate-900 truncate">
-                        {ordine.cliente_nome}
-                      </h3>
-                      <span className={`flex-shrink-0 px-2 py-0.5 text-xs font-bold rounded-full ${
-                        ordine.stato === 'ritirato' 
-                          ? 'bg-emerald-100 text-emerald-700' 
-                          : 'bg-amber-100 text-amber-700'
-                      }`}>
-                        {ordine.stato === 'ritirato' ? '✓' : '●'}
-                      </span>
+              <div key={ordine.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+                <Link
+                  to={`/ordini/${ordine.id}`}
+                  className="block p-4 hover:bg-slate-50 transition-colors"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-bold text-slate-900 truncate">
+                          {ordine.cliente_nome}
+                        </h3>
+                        <span className={`flex-shrink-0 px-2 py-0.5 text-xs font-bold rounded-full ${
+                          ordine.stato === 'ritirato' 
+                            ? 'bg-emerald-100 text-emerald-700' 
+                            : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {ordine.stato === 'ritirato' ? '✓' : '○'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-500">
+                        Ordine #{ordine.id} · {formatDate(ordine.data_ordine)}
+                      </p>
                     </div>
-                    <p className="text-sm text-slate-500">
-                      #{ordine.id} · {ordine.tipo_ordine}
-                    </p>
+                    <ChevronRight size={20} className="text-slate-300 flex-shrink-0 mt-1" />
                   </div>
-                  <div className="flex items-center gap-1">
+                  
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                      ordine.tipo_ordine === 'pedane' 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : 'bg-purple-100 text-purple-700'
+                    }`}>
+                      {ordine.tipo_ordine}
+                    </span>
+                    <span className="font-medium">
+                      {parseFloat(ordine.totale_quintali || 0).toFixed(1)} q
+                    </span>
+                    <span className="text-slate-500">
+                      {formatCurrency(ordine.totale_importo)}
+                    </span>
+                  </div>
+                </Link>
+
+                {/* Pulsante espandi prodotti mobile */}
+                {ordine.righe && ordine.righe.length > 0 && (
+                  <>
                     <button
-                      onClick={(e) => handleElimina(ordine.id, e)}
-                      disabled={eliminando === ordine.id}
-                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                      onClick={(e) => toggleEspansione(ordine.id, e)}
+                      className="w-full px-4 py-2 bg-slate-50 border-t border-slate-100 flex items-center justify-center gap-2 text-sm text-slate-600 hover:bg-slate-100 transition-colors"
                     >
-                      <Trash2 size={16} />
+                      <Package size={14} />
+                      {ordineEspanso === ordine.id ? 'Nascondi' : 'Mostra'} {ordine.righe.length} prodott{ordine.righe.length === 1 ? 'o' : 'i'}
+                      {ordineEspanso === ordine.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                     </button>
-                    <ChevronRight size={20} className="text-slate-300" />
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4 text-sm text-slate-500 mb-2">
-                  <span className="flex items-center gap-1">
-                    <Calendar size={14} />
-                    {formatDate(ordine.data_ordine)}
-                  </span>
-                  {ordine.data_ritiro && (
-                    <span>→ {formatDate(ordine.data_ritiro)}</span>
-                  )}
-                </div>
-                
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                  <span className="text-sm text-slate-600">
-                    {parseFloat(ordine.totale_quintali || 0).toFixed(1)} quintali
-                  </span>
-                  <span className="font-bold">
-                    {formatCurrency(ordine.totale_importo)}
-                  </span>
-                </div>
-              </Link>
+
+                    {ordineEspanso === ordine.id && (
+                      <div className="border-t border-slate-100 bg-slate-50 p-3 space-y-2">
+                        {ordine.righe.map((riga) => (
+                          <div key={riga.id} className="bg-white rounded-xl p-3 border border-slate-200">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <p className="font-medium text-slate-900">{riga.prodotto_nome}</p>
+                                <div className="flex items-center gap-2 mt-1 text-sm text-slate-500">
+                                  {riga.prodotto_tipologia && (
+                                    <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${
+                                      riga.prodotto_tipologia === '00' 
+                                        ? 'bg-amber-100 text-amber-700'
+                                        : riga.prodotto_tipologia === '0'
+                                        ? 'bg-orange-100 text-orange-700'
+                                        : 'bg-slate-100 text-slate-600'
+                                    }`}>
+                                      {riga.prodotto_tipologia}
+                                    </span>
+                                  )}
+                                  <span className="flex items-center gap-1">
+                                    <Factory size={12} />
+                                    {riga.mulino_nome}
+                                  </span>
+                                </div>
+                              </div>
+                              <span className="font-bold text-slate-900">
+                                {parseFloat(riga.quintali || 0).toFixed(1)} q
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             ))}
           </div>
         </>

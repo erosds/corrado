@@ -163,9 +163,6 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="mt-12 pt-6 border-t border-slate-100 text-center">
-        <p className="text-xs text-slate-400">
-          Gestionale Farina v1.0 · Corrado Irlando
-        </p>
       </footer>
     </div>
   );
