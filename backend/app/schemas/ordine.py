@@ -29,6 +29,7 @@ class RigaOrdineRead(RigaOrdineBase):
 class RigaOrdineDettaglio(RigaOrdineRead):
     """Riga con nomi prodotto e mulino"""
     prodotto_nome: Optional[str] = None
+    prodotto_tipologia: Optional[str] = None  # Tipo farina (0, 00, altro)
     mulino_nome: Optional[str] = None
 
 
@@ -78,6 +79,7 @@ class OrdineList(BaseModel):
     cliente_nome: Optional[str] = None
     data_ordine: date
     data_ritiro: Optional[date] = None
+    data_incasso_mulino: Optional[date] = None  # Aggiunto per mostrare in tabella
     tipo_ordine: str
     stato: str
     totale_quintali: Optional[Decimal] = None
@@ -90,6 +92,7 @@ class OrdineList(BaseModel):
 class OrdineDettaglio(OrdineRead):
     """Ordine completo con tutti i dettagli"""
     cliente_nome: Optional[str] = None
+    cliente_indirizzo: Optional[str] = None  # Indirizzo consegna cliente
     trasportatore_nome: Optional[str] = None
     righe: List[RigaOrdineDettaglio] = []
 

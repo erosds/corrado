@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, desc
 from typing import List, Optional
 from datetime import date, timedelta
-from dateutil.relativedelta import relativedelta
 from decimal import Decimal
 
 from app.database import get_db
@@ -48,6 +47,37 @@ def salva_storico_prezzo(db: Session, cliente_id: int, prodotto_id: int, prezzo:
     db.add(storico)
 
 
+# ==========================================
+# ENDPOINT SPECIFICI (DEVONO STARE PRIMA DI /{ordine_id})
+# ==========================================
+
+@router.get("/ultimo-prezzo/{cliente_id}/{prodotto_id}")
+def get_ultimo_prezzo(cliente_id: int, prodotto_id: int, db: Session = Depends(get_db)):
+    """
+    Ottiene l'ultimo prezzo applicato a un cliente per un prodotto specifico.
+    Utile durante l'inserimento ordine per suggerire il prezzo.
+    
+    NOTA: Questo endpoint DEVE stare prima di /{ordine_id} per evitare
+    che FastAPI interpreti "ultimo-prezzo" come un ordine_id.
+    """
+    ultimo = db.query(StoricoPrezzo).filter(
+        StoricoPrezzo.cliente_id == cliente_id,
+        StoricoPrezzo.prodotto_id == prodotto_id
+    ).order_by(desc(StoricoPrezzo.creato_il)).first()
+    
+    if not ultimo:
+        return {"prezzo": None, "messaggio": "Nessun prezzo precedente trovato"}
+    
+    return {
+        "prezzo": float(ultimo.prezzo),
+        "data": ultimo.creato_il
+    }
+
+
+# ==========================================
+# ENDPOINT LISTA
+# ==========================================
+
 @router.get("/", response_model=List[OrdineList])
 def lista_ordini(
     cliente_id: Optional[int] = Query(None, description="Filtra per cliente"),
@@ -65,6 +95,7 @@ def lista_ordini(
         Cliente.nome.label("cliente_nome"),
         Ordine.data_ordine,
         Ordine.data_ritiro,
+        Ordine.data_incasso_mulino,
         Ordine.tipo_ordine,
         Ordine.stato
     ).join(Cliente)
@@ -97,6 +128,7 @@ def lista_ordini(
             "cliente_nome": o.cliente_nome,
             "data_ordine": o.data_ordine,
             "data_ritiro": o.data_ritiro,
+            "data_incasso_mulino": o.data_incasso_mulino,
             "tipo_ordine": o.tipo_ordine,
             "stato": o.stato,
             "totale_quintali": totali.totale_quintali or Decimal("0"),
@@ -105,6 +137,10 @@ def lista_ordini(
     
     return risultati
 
+
+# ==========================================
+# ENDPOINT DETTAGLIO (DEVE STARE DOPO GLI ENDPOINT SPECIFICI)
+# ==========================================
 
 @router.get("/{ordine_id}", response_model=OrdineDettaglio)
 def get_ordine(ordine_id: int, db: Session = Depends(get_db)):
@@ -132,6 +168,7 @@ def get_ordine(ordine_id: int, db: Session = Depends(get_db)):
             "prezzo_quintale": riga.prezzo_quintale,
             "prezzo_totale": riga.prezzo_totale,
             "prodotto_nome": prodotto.nome if prodotto else None,
+            "prodotto_tipologia": prodotto.tipologia if prodotto else None,
             "mulino_nome": mulino.nome if mulino else None
         })
     
@@ -139,6 +176,7 @@ def get_ordine(ordine_id: int, db: Session = Depends(get_db)):
         "id": ordine.id,
         "cliente_id": ordine.cliente_id,
         "cliente_nome": ordine.cliente.nome if ordine.cliente else None,
+        "cliente_indirizzo": ordine.cliente.indirizzo_consegna if ordine.cliente else None,
         "data_ordine": ordine.data_ordine,
         "data_ritiro": ordine.data_ritiro,
         "data_incasso_mulino": ordine.data_incasso_mulino,
@@ -152,6 +190,10 @@ def get_ordine(ordine_id: int, db: Session = Depends(get_db)):
         "righe": righe_dettaglio
     }
 
+
+# ==========================================
+# ENDPOINT CREAZIONE
+# ==========================================
 
 @router.post("/", response_model=OrdineRead, status_code=201)
 def crea_ordine(ordine: OrdineCreate, db: Session = Depends(get_db)):
@@ -204,6 +246,10 @@ def crea_ordine(ordine: OrdineCreate, db: Session = Depends(get_db)):
     return db_ordine
 
 
+# ==========================================
+# ENDPOINT AGGIORNAMENTO
+# ==========================================
+
 @router.put("/{ordine_id}", response_model=OrdineRead)
 def aggiorna_ordine(
     ordine_id: int,
@@ -232,6 +278,10 @@ def aggiorna_ordine(
     return db_ordine
 
 
+# ==========================================
+# ENDPOINT ELIMINAZIONE
+# ==========================================
+
 @router.delete("/{ordine_id}", status_code=204)
 def elimina_ordine(ordine_id: int, db: Session = Depends(get_db)):
     """Elimina ordine e relative righe"""
@@ -242,23 +292,3 @@ def elimina_ordine(ordine_id: int, db: Session = Depends(get_db)):
     db.delete(db_ordine)
     db.commit()
     return None
-
-
-@router.get("/ultimo-prezzo/{cliente_id}/{prodotto_id}")
-def get_ultimo_prezzo(cliente_id: int, prodotto_id: int, db: Session = Depends(get_db)):
-    """
-    Ottiene l'ultimo prezzo applicato a un cliente per un prodotto specifico.
-    Utile durante l'inserimento ordine per suggerire il prezzo.
-    """
-    ultimo = db.query(StoricoPrezzo).filter(
-        StoricoPrezzo.cliente_id == cliente_id,
-        StoricoPrezzo.prodotto_id == prodotto_id
-    ).order_by(desc(StoricoPrezzo.creato_il)).first()
-    
-    if not ultimo:
-        return {"prezzo": None, "messaggio": "Nessun prezzo precedente trovato"}
-    
-    return {
-        "prezzo": ultimo.prezzo,
-        "data": ultimo.creato_il
-    }
