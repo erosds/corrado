@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, Link, useParams, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft, Package, Trash2, Factory, ChevronDown, ChevronUp,
   Plus, X, Search, AlertCircle
@@ -9,6 +9,8 @@ import DateHeader from '@/components/DateHeader';
 
 export default function OrdineNuovo() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isModifica = Boolean(id);
   const [searchParams] = useSearchParams();
   const clienteIdParam = searchParams.get('cliente');
 
@@ -54,6 +56,7 @@ export default function OrdineNuovo() {
   const [expanded, setExpanded] = useState(true);
   const [expandedAltro, setExpandedAltro] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);  // ← AGGIUNGI QUESTA RIGA
   const [erroriDate, setErroriDate] = useState({});
 
   // Caricamento iniziale
@@ -72,6 +75,58 @@ export default function OrdineNuovo() {
       }
     }
   }, [clienteIdParam, clienti]);
+
+  // Carica dati ordine esistente se in modalità modifica
+  useEffect(() => {
+    if (!isModifica) return;
+
+    const caricaOrdine = async () => {
+      try {
+        setLoading(true);
+        const { data: ordine } = await ordiniApi.dettaglio(id);
+
+        // Imposta i dati del form
+        setFormData({
+          cliente_id: ordine.cliente_id,
+          data_ordine: ordine.data_ordine,
+          data_ritiro: ordine.data_ritiro || '',
+          data_incasso_mulino: ordine.data_incasso_mulino || '',
+          tipo_ordine: ordine.tipo_ordine,
+          trasportatore_id: ordine.trasportatore_id || '',
+          note: ordine.note || ''
+        });
+
+        // Carica il cliente selezionato
+        const { data: cliente } = await clientiApi.dettaglio(ordine.cliente_id);
+        setClienteSelezionato(cliente);
+        setClienteSearch(cliente.nome);
+
+        // Carica le righe esistenti
+        const righeCaricate = ordine.righe.map(riga => ({
+          id: riga.id,
+          prodotto_id: riga.prodotto_id,
+          prodotto_nome: riga.prodotto_nome,
+          prodotto_tipologia: riga.prodotto_tipologia,
+          mulino_id: riga.mulino_id,
+          mulino_nome: riga.mulino_nome,
+          pedane: riga.pedane,
+          quintali: parseFloat(riga.quintali),
+          prezzo_quintale: parseFloat(riga.prezzo_quintale),
+          prezzo_totale: parseFloat(riga.prezzo_totale),
+        }));
+        setRighe(righeCaricate);
+
+      } catch (error) {
+        console.error('Errore caricamento ordine:', error);
+        alert('Errore nel caricamento dell\'ordine');
+        navigate('/ordini');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    caricaOrdine();
+  }, [id, isModifica, navigate]);
 
   const caricaDati = async () => {
     try {
@@ -329,8 +384,13 @@ export default function OrdineNuovo() {
         })),
       };
 
-      const { data } = await ordiniApi.crea(ordineData);
-      navigate(`/ordini/${data.id}`);
+      if (isModifica) {
+        await ordiniApi.aggiorna(id, ordineData);
+        navigate(`/ordini/${id}`);
+      } else {
+        const { data } = await ordiniApi.crea(ordineData);
+        navigate(`/ordini/${data.id}`);
+      }
     } catch (error) {
       console.error('Errore creazione ordine:', error);
       alert('Errore durante la creazione dell\'ordine');
@@ -357,9 +417,7 @@ export default function OrdineNuovo() {
         >
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-2xl md:text-3xl font-black tracking-tight">
-          Nuovo Ordine
-        </h1>
+        <h1 className="text-xl font-bold">{isModifica ? 'Modifica Ordine' : 'Nuovo Ordine'}</h1>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -565,8 +623,8 @@ export default function OrdineNuovo() {
               type="button"
               onClick={() => setFormData({ ...formData, tipo_ordine: 'pedane' })}
               className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${formData.tipo_ordine === 'pedane'
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                ? 'bg-slate-900 text-white'
+                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                 }`}
             >
               Pedane
@@ -575,8 +633,8 @@ export default function OrdineNuovo() {
               type="button"
               onClick={() => setFormData({ ...formData, tipo_ordine: 'sfuso' })}
               className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${formData.tipo_ordine === 'sfuso'
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                ? 'bg-slate-900 text-white'
+                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                 }`}
             >
               Sfuso
@@ -710,7 +768,7 @@ export default function OrdineNuovo() {
               disabled={saving || righe.length === 0 || !formData.cliente_id}
               className="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
             >
-              {saving ? 'Salvataggio...' : 'Crea Ordine'}
+              {saving ? 'Salvataggio...' : (isModifica ? 'Salva Modifiche' : 'Crea Ordine')}
             </button>
           </div>
         </div>
@@ -817,8 +875,8 @@ export default function OrdineNuovo() {
                         type="button"
                         onClick={() => handleSelezionaProdotto(prod)}
                         className={`p-3 text-left rounded-xl transition-colors ${prodottoSelezionato?.id === prod.id
-                            ? 'bg-slate-900 text-white'
-                            : 'bg-slate-50 hover:bg-slate-100'
+                          ? 'bg-slate-900 text-white'
+                          : 'bg-slate-50 hover:bg-slate-100'
                           }`}
                       >
                         <p className="font-medium text-sm truncate">{prod.nome}</p>

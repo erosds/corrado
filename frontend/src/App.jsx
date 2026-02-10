@@ -28,6 +28,7 @@ function App() {
           <Route path="ordini" element={<Ordini />} />
           <Route path="ordini/nuovo" element={<OrdineNuovo />} />
           <Route path="ordini/:id" element={<OrdineDettaglio />} />
+          <Route path="ordini/:id/modifica" element={<OrdineNuovo />} />
           
           {/* Mulini */}
           <Route path="mulini" element={<Mulini />} />

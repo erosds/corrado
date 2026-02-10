@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { 
-  ArrowLeft, Edit, Trash2, CheckCircle, Clock, 
-  Calendar, Factory, Package, User, Truck 
+import {
+  ArrowLeft, Edit, Trash2, CheckCircle, Clock,
+  Calendar, Factory, Package, User, Truck
 } from 'lucide-react';
 import { ordiniApi } from '@/lib/api';
 
@@ -40,7 +40,7 @@ export default function OrdineDettaglio() {
 
   const handleDelete = async () => {
     if (!confirm('Sei sicuro di voler eliminare questo ordine?')) return;
-    
+
     try {
       await ordiniApi.elimina(id);
       navigate('/ordini');
@@ -53,9 +53,9 @@ export default function OrdineDettaglio() {
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('it-IT', { 
+    return date.toLocaleDateString('it-IT', {
       weekday: 'short',
-      day: '2-digit', 
+      day: '2-digit',
       month: 'long',
       year: 'numeric'
     });
@@ -97,8 +97,8 @@ export default function OrdineDettaglio() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <Link 
-            to="/ordini" 
+          <Link
+            to="/ordini"
             className="text-slate-400 hover:text-slate-600 text-sm flex items-center gap-1 mb-2"
           >
             <ArrowLeft size={16} />
@@ -108,19 +108,18 @@ export default function OrdineDettaglio() {
             <h1 className="text-2xl md:text-3xl font-black tracking-tight">
               Ordine #{ordine.id}
             </h1>
-            <span className={`px-3 py-1 text-sm font-bold rounded-full ${
-              ordine.stato === 'ritirato'
+            <span className={`px-3 py-1 text-sm font-bold rounded-full ${ordine.stato === 'ritirato'
                 ? 'bg-emerald-100 text-emerald-700'
                 : 'bg-amber-100 text-amber-700'
-            }`}>
+              }`}>
               {ordine.stato === 'ritirato' ? 'Ritirato' : 'Inserito'}
             </span>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Link
-            to={`/ordini/${ordine.id}`}
+            to={`/ordini/${ordine.id}/modifica`}
             className="p-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors"
             title="Modifica ordine"
           >
@@ -140,7 +139,7 @@ export default function OrdineDettaglio() {
       <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-3xl p-6 mb-6">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <Link 
+            <Link
               to={`/clienti/${ordine.cliente_id}`}
               className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors"
             >
@@ -148,11 +147,10 @@ export default function OrdineDettaglio() {
               <span className="text-lg font-bold">{ordine.cliente_nome}</span>
             </Link>
           </div>
-          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-            ordine.tipo_ordine === 'pedane'
+          <span className={`px-3 py-1 rounded-full text-xs font-bold ${ordine.tipo_ordine === 'pedane'
               ? 'bg-blue-500/20 text-blue-300'
               : 'bg-purple-500/20 text-purple-300'
-          }`}>
+            }`}>
             {ordine.tipo_ordine}
           </span>
         </div>
@@ -217,7 +215,7 @@ export default function OrdineDettaglio() {
         <div className="px-5 py-4 border-b border-slate-100">
           <h3 className="font-bold">Prodotti ({ordine.righe?.length || 0})</h3>
         </div>
-        
+
         {ordine.righe && ordine.righe.length > 0 ? (
           <div className="divide-y divide-slate-100">
             {ordine.righe.map((riga, idx) => (
@@ -232,7 +230,7 @@ export default function OrdineDettaglio() {
                   </div>
                   <p className="font-bold text-lg">€{parseFloat(riga.prezzo_totale).toFixed(2)}</p>
                 </div>
-                
+
                 <div className="flex gap-4 text-sm text-slate-600">
                   {riga.pedane && (
                     <span>{parseFloat(riga.pedane)} pedane</span>
@@ -266,7 +264,7 @@ export default function OrdineDettaglio() {
         <h3 className="font-bold text-sm text-slate-400 uppercase tracking-wider mb-4">
           Azioni
         </h3>
-        
+
         {ordine.stato === 'inserito' ? (
           <button
             onClick={() => handleCambiaStato('ritirato')}
