@@ -64,7 +64,7 @@ export default function Home() {
       <header className="mb-8">
         <p className="text-slate-400 text-sm font-medium capitalize">{dataFormattata}</p>
         <h1 className="text-3xl md:text-4xl font-black tracking-tight mt-1">
-          Buongiorno 👋
+          Home
         </h1>
       </header>
 

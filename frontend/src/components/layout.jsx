@@ -36,7 +36,7 @@ export default function Layout() {
               <ChevronLeft size={24} />
             </button>
           ) : (
-            <div className="font-bold text-sm tracking-tight">Gestionale Farina</div>
+            <div className="font-bold text-sm tracking-tight">FlourManagement™</div>
           )}
           
           <button 
@@ -76,7 +76,7 @@ export default function Layout() {
       {/* Sidebar Desktop */}
       <aside className="hidden md:flex flex-col fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-slate-100 p-6">
         <div className="mb-10">
-          <h1 className="font-black text-xl tracking-tight">Gestionale</h1>
+          <h1 className="font-black text-xl tracking-tight">FlourManagement™</h1>
           <p className="text-xs text-slate-400 font-medium">Corrado Irlando</p>
         </div>
 
