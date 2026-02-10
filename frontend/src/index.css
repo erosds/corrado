@@ -18,7 +18,7 @@ input[type="datetime-local"] {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  border-radius: 0.5rem; /* rounded-xl come gli altri input */
+  border-radius: 0.5rem; 
 }
 input[type="number"],
 input[type="month"],
@@ -34,3 +34,4 @@ input[type="search"] {
   appearance: none;
   border-radius: 0.5rem; /* Come i tuoi altri input rounded-xl */
 }
+

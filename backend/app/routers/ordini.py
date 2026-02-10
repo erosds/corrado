@@ -97,8 +97,10 @@ def lista_ordini(
         Ordine.data_ritiro,
         Ordine.data_incasso_mulino,
         Ordine.tipo_ordine,
-        Ordine.stato
-    ).join(Cliente)
+        Ordine.stato,
+        Ordine.trasportatore_id,
+        Trasportatore.nome.label("trasportatore_nome")
+    ).join(Cliente).outerjoin(Trasportatore)
     
     if cliente_id:
         query = query.filter(Ordine.cliente_id == cliente_id)
@@ -134,7 +136,9 @@ def lista_ordini(
                 "prodotto_tipologia": prodotto.tipologia if prodotto else None,
                 "mulino_id": riga.mulino_id,
                 "mulino_nome": mulino.nome if mulino else None,
-                "quintali": riga.quintali
+                "quintali": riga.quintali,
+                "prezzo_quintale": riga.prezzo_quintale,
+                "prezzo_totale": riga.prezzo_totale
             })
         
         risultati.append({
@@ -146,6 +150,8 @@ def lista_ordini(
             "data_incasso_mulino": o.data_incasso_mulino,
             "tipo_ordine": o.tipo_ordine,
             "stato": o.stato,
+            "trasportatore_id": o.trasportatore_id,
+            "trasportatore_nome": o.trasportatore_nome,
             "totale_quintali": totali.totale_quintali or Decimal("0"),
             "totale_importo": totali.totale_importo or Decimal("0"),
             "righe": righe_lista

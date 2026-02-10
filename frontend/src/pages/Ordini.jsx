@@ -119,7 +119,7 @@ export default function Ordini() {
     return date.toLocaleDateString('it-IT', {
       day: '2-digit',
       month: 'short',
-      year: 'numeric'
+      year: '2-digit'
     });
   };
 
@@ -131,10 +131,14 @@ export default function Ordini() {
   };
 
   const handleOrdinamento = (campo) => {
-    setOrdinamento(prev => ({
-      campo,
-      direzione: prev.campo === campo && prev.direzione === 'asc' ? 'desc' : 'asc'
-    }));
+    setOrdinamento(prev => {
+      if (prev.campo === campo) {
+        return { campo, direzione: prev.direzione === 'asc' ? 'desc' : 'asc' };
+      }
+      // Default desc per date e numeri, asc per testo
+      const defaultDesc = ['data_ordine', 'data_ritiro', 'totale_quintali', 'totale_importo', 'id'].includes(campo);
+      return { campo, direzione: defaultDesc ? 'desc' : 'asc' };
+    });
   };
 
   const IconaOrdinamento = ({ campo }) => {
@@ -168,16 +172,25 @@ export default function Ordini() {
     })
     .sort((a, b) => {
       const dir = ordinamento.direzione === 'asc' ? 1 : -1;
-      const valA = a[ordinamento.campo];
-      const valB = b[ordinamento.campo];
+      const campo = ordinamento.campo;
+      let valA = a[campo];
+      let valB = b[campo];
 
-      if (valA === null || valA === undefined) return 1;
-      if (valB === null || valB === undefined) return -1;
+      if (valA === null || valA === undefined || valA === '') return 1;
+      if (valB === null || valB === undefined || valB === '') return -1;
 
-      if (typeof valA === 'string') {
-        return valA.localeCompare(valB) * dir;
+      // Campi numerici (arrivano come string/Decimal dal backend)
+      if (['totale_quintali', 'totale_importo', 'id'].includes(campo)) {
+        return (parseFloat(valA) - parseFloat(valB)) * dir;
       }
-      return (valA - valB) * dir;
+
+      // Campi data
+      if (['data_ordine', 'data_ritiro'].includes(campo)) {
+        return (new Date(valA) - new Date(valB)) * dir;
+      }
+
+      // Testo
+      return String(valA).localeCompare(String(valB)) * dir;
     });
 
   const ordiniInseriti = ordini.filter(o => calcolaStato(o.data_ritiro) === 'inserito').length;
@@ -309,8 +322,11 @@ export default function Ordini() {
                     >
                       Data Ordine <IconaOrdinamento campo="data_ordine" />
                     </th>
-                    <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">
-                      Tipo
+                    <th
+                      className="text-left px-4 py-3 text-sm font-semibold text-slate-600 cursor-pointer hover:bg-slate-100"
+                      onClick={() => handleOrdinamento('tipo_ordine')}
+                    >
+                      Tipo <IconaOrdinamento campo="tipo_ordine" />
                     </th>
                     <th
                       className="text-right px-4 py-3 text-sm font-semibold text-slate-600 cursor-pointer hover:bg-slate-100"
@@ -333,8 +349,11 @@ export default function Ordini() {
                     >
                       Data Ritiro <IconaOrdinamento campo="data_ritiro" />
                     </th>
-                    <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">
-                      Trasportatore
+                    <th
+                      className="text-left px-4 py-3 text-sm font-semibold text-slate-600 cursor-pointer hover:bg-slate-100"
+                      onClick={() => handleOrdinamento('trasportatore_nome')}
+                    >
+                      Trasportatore <IconaOrdinamento campo="trasportatore_nome" />
                     </th>
                     <th className="text-center px-4 py-3 text-sm font-semibold text-slate-600">
                       Azioni
@@ -360,7 +379,7 @@ export default function Ordini() {
                             ? 'bg-blue-100 text-blue-700'
                             : 'bg-purple-100 text-purple-700'
                             }`}>
-                            {ordine.tipo_ordine}
+                            {ordine.tipo_ordine === 'pedane' ? 'P' : 'S'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-sm text-right font-medium">
@@ -378,12 +397,17 @@ export default function Ordini() {
                           </span>
                         </td>
                         <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="date"
-                            value={ordine.data_ritiro || ''}
-                            onChange={(e) => handleDataRitiroChange(ordine.id, e.target.value, e)}
-                            className="px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white w-36"
-                          />
+                          <div className="relative w-36">
+                            <input
+                              type="date"
+                              value={ordine.data_ritiro || ''}
+                              onChange={(e) => handleDataRitiroChange(ordine.id, e.target.value, e)}
+                              className={`w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white ${!ordine.data_ritiro ? 'text-transparent' : ''}`}
+                            />
+                            {!ordine.data_ritiro && (
+                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">-</span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                           <select
@@ -437,6 +461,12 @@ export default function Ordini() {
                                     <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">
                                       Mulino
                                     </th>
+                                    <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">
+                                      €/q
+                                    </th>
+                                    <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">
+                                      Totale
+                                    </th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
@@ -465,6 +495,12 @@ export default function Ordini() {
                                           <Factory size={14} className="text-slate-400" />
                                           <span className="text-slate-700">{riga.mulino_nome || '-'}</span>
                                         </div>
+                                      </td>
+                                      <td className="px-4 py-2.5 text-right text-slate-600">
+                                        {riga.prezzo_quintale ? `€${parseFloat(riga.prezzo_quintale).toFixed(2)}` : '-'}
+                                      </td>
+                                      <td className="px-4 py-2.5 text-right font-medium text-slate-900">
+                                        {riga.prezzo_totale ? `€${parseFloat(riga.prezzo_totale).toFixed(2)}` : '-'}
                                       </td>
                                     </tr>
                                   ))}
@@ -521,7 +557,7 @@ export default function Ordini() {
                       ? 'bg-blue-100 text-blue-700'
                       : 'bg-purple-100 text-purple-700'
                       }`}>
-                      {ordine.tipo_ordine}
+                      {ordine.tipo_ordine === 'pedane' ? 'P' : 'S'}
                     </span>
                     <span className="font-medium">
                       {parseFloat(ordine.totale_quintali || 0).toFixed(1)} q
@@ -582,9 +618,14 @@ export default function Ordini() {
                               </span>
                             </div>
                           </div>
-                          <span className="font-bold text-slate-900">
-                            {parseFloat(riga.quintali || 0).toFixed(1)}
-                          </span>
+                          <div className="text-right">
+                            <span className="font-bold text-slate-900">
+                              {riga.prezzo_totale ? `€${parseFloat(riga.prezzo_totale).toFixed(2)}` : '-'}
+                            </span>
+                            <p className="text-xs text-slate-500">
+                              {parseFloat(riga.quintali || 0).toFixed(1)}q @ €{parseFloat(riga.prezzo_quintale || 0).toFixed(2)}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     ))}

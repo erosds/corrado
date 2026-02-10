@@ -43,6 +43,8 @@ class RigaOrdineLista(BaseModel):
     mulino_id: Optional[int] = None
     mulino_nome: Optional[str] = None
     quintali: Decimal
+    prezzo_quintale: Optional[Decimal] = None
+    prezzo_totale: Optional[Decimal] = None
 
     class Config:
         from_attributes = True
@@ -97,6 +99,8 @@ class OrdineList(BaseModel):
     data_incasso_mulino: Optional[date] = None
     tipo_ordine: str
     stato: str
+    trasportatore_id: Optional[int] = None
+    trasportatore_nome: Optional[str] = None
     totale_quintali: Optional[Decimal] = None
     totale_importo: Optional[Decimal] = None
     righe: List[RigaOrdineLista] = []  # Righe con dettagli prodotto/mulino
