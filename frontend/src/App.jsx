@@ -1,12 +1,7 @@
-import Clienti from "./pages/Clienti";
+import Home from "./pages/Home";
 
 function App() {
-  return (
-    <div style={{ padding: 20 }}>
-      <h1>Gestionale farina</h1>
-      <Clienti />
-    </div>
-  );
+  return <Home />;
 }
 
 export default App;
