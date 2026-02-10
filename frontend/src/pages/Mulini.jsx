@@ -1,25 +1,25 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Plus, User, Phone, CreditCard, ChevronRight } from 'lucide-react';
-import { clientiApi } from '@/lib/api';
+import { Search, Plus, Factory, Package, ChevronRight, Phone, Mail } from 'lucide-react';
+import { muliniApi } from '@/lib/api';
 
-export default function Clienti() {
-  const [clienti, setClienti] = useState([]);
+export default function Mulini() {
+  const [mulini, setMulini] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
-    caricaClienti();
+    caricaMulini();
   }, [search]);
 
-  const caricaClienti = async () => {
+  const caricaMulini = async () => {
     try {
       setLoading(true);
-      const { data } = await clientiApi.lista(search);
-      setClienti(data);
+      const { data } = await muliniApi.lista(search);
+      setMulini(data);
     } catch (error) {
-      console.error('Errore caricamento clienti:', error);
+      console.error('Errore caricamento mulini:', error);
     } finally {
       setLoading(false);
     }
@@ -30,8 +30,8 @@ export default function Clienti() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight">Clienti</h1>
-          <p className="text-slate-500 text-sm mt-1">{clienti.length} clienti totali</p>
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight">Mulini</h1>
+          <p className="text-slate-500 text-sm mt-1">{mulini.length} mulini totali</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
@@ -47,14 +47,14 @@ export default function Clienti() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
         <input
           type="text"
-          placeholder="Cerca cliente..."
+          placeholder="Cerca mulino..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
         />
       </div>
 
-      {/* Lista Clienti */}
+      {/* Lista Mulini */}
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -64,10 +64,10 @@ export default function Clienti() {
             </div>
           ))}
         </div>
-      ) : clienti.length === 0 ? (
+      ) : mulini.length === 0 ? (
         <div className="text-center py-12">
-          <User className="mx-auto text-slate-300 mb-4" size={48} />
-          <p className="text-slate-500">Nessun cliente trovato</p>
+          <Factory className="mx-auto text-slate-300 mb-4" size={48} />
+          <p className="text-slate-500">Nessun mulino trovato</p>
           {search && (
             <button
               onClick={() => setSearch('')}
@@ -79,31 +79,37 @@ export default function Clienti() {
         </div>
       ) : (
         <div className="space-y-3">
-          {clienti.map((cliente) => (
+          {mulini.map((mulino) => (
             <Link
-              key={cliente.id}
-              to={`/clienti/${cliente.id}`}
+              key={mulino.id}
+              to={`/mulini/${mulino.id}`}
               className="block bg-white rounded-2xl p-4 border border-slate-100 hover:border-slate-300 hover:shadow-md transition-all group"
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-slate-900 truncate">
-                      {cliente.nome}
-                    </h3>
-                    {cliente.riba && (
-                      <span className="flex-shrink-0 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">
-                        RIBA
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
-                    {cliente.cellulare && (
-                      <span className="flex items-center gap-1">
-                        <Phone size={14} />
-                        {cliente.cellulare}
-                      </span>
-                    )}
+                    <div className="p-2 bg-orange-100 rounded-xl">
+                      <Factory size={20} className="text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900">
+                        {mulino.nome}
+                      </h3>
+                      <div className="flex items-center gap-3 mt-1 text-sm text-slate-500">
+                        {mulino.telefono && (
+                          <span className="flex items-center gap-1">
+                            <Phone size={12} />
+                            {mulino.telefono}
+                          </span>
+                        )}
+                        {mulino.email1 && (
+                          <span className="flex items-center gap-1">
+                            <Mail size={12} />
+                            {mulino.email1}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <ChevronRight 
@@ -116,13 +122,13 @@ export default function Clienti() {
         </div>
       )}
 
-      {/* Modal Nuovo Cliente */}
+      {/* Modal Nuovo Mulino */}
       {showForm && (
-        <FormCliente
+        <FormMulino
           onClose={() => setShowForm(false)}
           onSaved={() => {
             setShowForm(false);
-            caricaClienti();
+            caricaMulini();
           }}
         />
       )}
@@ -130,19 +136,16 @@ export default function Clienti() {
   );
 }
 
-// --- Form Cliente (Modal) ---
-function FormCliente({ cliente = null, onClose, onSaved }) {
+// --- Form Mulino (Modal) ---
+function FormMulino({ mulino = null, onClose, onSaved }) {
   const [formData, setFormData] = useState({
-    nome: cliente?.nome || '',
-    partita_iva: cliente?.partita_iva || '',
-    indirizzo_consegna: cliente?.indirizzo_consegna || '',
-    telefono_fisso: cliente?.telefono_fisso || '',
-    cellulare: cliente?.cellulare || '',
-    email: cliente?.email || '',
-    referente: cliente?.referente || '',
-    pedana_standard: cliente?.pedana_standard || '',
-    riba: cliente?.riba || false,
-    note: cliente?.note || '',
+    nome: mulino?.nome || '',
+    indirizzo_ritiro: mulino?.indirizzo_ritiro || '',
+    telefono: mulino?.telefono || '',
+    email1: mulino?.email1 || '',
+    email2: mulino?.email2 || '',
+    email3: mulino?.email3 || '',
+    note: mulino?.note || '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -152,10 +155,10 @@ function FormCliente({ cliente = null, onClose, onSaved }) {
 
     try {
       setSaving(true);
-      if (cliente) {
-        await clientiApi.aggiorna(cliente.id, formData);
+      if (mulino) {
+        await muliniApi.aggiorna(mulino.id, formData);
       } else {
-        await clientiApi.crea(formData);
+        await muliniApi.crea(formData);
       }
       onSaved();
     } catch (error) {
@@ -171,7 +174,7 @@ function FormCliente({ cliente = null, onClose, onSaved }) {
       <div className="bg-white w-full md:w-[500px] md:rounded-3xl rounded-t-3xl max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
           <h2 className="text-lg font-bold">
-            {cliente ? 'Modifica Cliente' : 'Nuovo Cliente'}
+            {mulino ? 'Modifica Mulino' : 'Nuovo Mulino'}
           </h2>
           <button
             onClick={onClose}
@@ -195,107 +198,64 @@ function FormCliente({ cliente = null, onClose, onSaved }) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Cellulare
-              </label>
-              <input
-                type="tel"
-                value={formData.cellulare}
-                onChange={(e) => setFormData({ ...formData, cellulare: e.target.value })}
-                className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Telefono fisso
-              </label>
-              <input
-                type="tel"
-                value={formData.telefono_fisso}
-                onChange={(e) => setFormData({ ...formData, telefono_fisso: e.target.value })}
-                className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900"
-              />
-            </div>
-          </div>
-
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Partita IVA
-            </label>
-            <input
-              type="text"
-              value={formData.partita_iva}
-              onChange={(e) => setFormData({ ...formData, partita_iva: e.target.value })}
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Indirizzo consegna
+              Indirizzo ritiro
             </label>
             <textarea
-              value={formData.indirizzo_consegna}
-              onChange={(e) => setFormData({ ...formData, indirizzo_consegna: e.target.value })}
+              value={formData.indirizzo_ritiro}
+              onChange={(e) => setFormData({ ...formData, indirizzo_ritiro: e.target.value })}
               rows={2}
               className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 resize-none"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Referente
-              </label>
-              <input
-                type="text"
-                value={formData.referente}
-                onChange={(e) => setFormData({ ...formData, referente: e.target.value })}
-                className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Pedana standard
-              </label>
-              <select
-                value={formData.pedana_standard}
-                onChange={(e) => setFormData({ ...formData, pedana_standard: e.target.value })}
-                className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white"
-              >
-                <option value="">Seleziona...</option>
-                <option value="8">8 quintali</option>
-                <option value="10">10 quintali</option>
-                <option value="12.5">12.5 quintali</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Telefono
+            </label>
+            <input
+              type="tel"
+              value={formData.telefono}
+              onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900"
+            />
           </div>
 
-          <div className="flex items-center gap-3 py-2">
-            <input
-              type="checkbox"
-              id="riba"
-              checked={formData.riba}
-              onChange={(e) => setFormData({ ...formData, riba: e.target.checked })}
-              className="w-5 h-5 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-            />
-            <label htmlFor="riba" className="text-sm font-medium text-slate-700">
-              Pagamento RIBA (+60gg fine mese)
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Email 1
             </label>
+            <input
+              type="email"
+              value={formData.email1}
+              onChange={(e) => setFormData({ ...formData, email1: e.target.value })}
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Email 2
+            </label>
+            <input
+              type="email"
+              value={formData.email2}
+              onChange={(e) => setFormData({ ...formData, email2: e.target.value })}
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Email 3
+            </label>
+            <input
+              type="email"
+              value={formData.email3}
+              onChange={(e) => setFormData({ ...formData, email3: e.target.value })}
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900"
+            />
           </div>
 
           <div>
@@ -332,4 +292,4 @@ function FormCliente({ cliente = null, onClose, onSaved }) {
   );
 }
 
-export { FormCliente };
+export { FormMulino };

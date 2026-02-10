@@ -1,7 +1,51 @@
-import Home from "./pages/Home";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
+import Home from './pages/Home';
+import Clienti from './pages/Clienti';
+import ClienteDettaglio from './pages/ClienteDettaglio';
+import Ordini from './pages/Ordini';
+import OrdineNuovo from './pages/OrdineNuovo';
+import OrdineDettaglio from './pages/OrdineDettaglio';
+import Mulini from './pages/Mulini';
+import MulinoDettaglio from './pages/MulinoDettaglio';
+import Carichi from './pages/Carichi';
+import CaricoDettaglio from './pages/CaricoDettaglio';
+import Statistiche from './pages/Statistiche';
+import Trasportatori from './pages/Trasportatori';
 
 function App() {
-  return <Home />;
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          
+          {/* Clienti */}
+          <Route path="clienti" element={<Clienti />} />
+          <Route path="clienti/:id" element={<ClienteDettaglio />} />
+          
+          {/* Ordini */}
+          <Route path="ordini" element={<Ordini />} />
+          <Route path="ordini/nuovo" element={<OrdineNuovo />} />
+          <Route path="ordini/:id" element={<OrdineDettaglio />} />
+          
+          {/* Mulini */}
+          <Route path="mulini" element={<Mulini />} />
+          <Route path="mulini/:id" element={<MulinoDettaglio />} />
+          
+          {/* Carichi */}
+          <Route path="carichi" element={<Carichi />} />
+          <Route path="carichi/:id" element={<CaricoDettaglio />} />
+          
+          {/* Statistiche */}
+          <Route path="statistiche" element={<Statistiche />} />
+          
+          {/* Trasportatori */}
+          <Route path="trasportatori" element={<Trasportatori />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;

@@ -1,94 +1,153 @@
-import { Users, ShoppingCart, Factory, BarChart3, ArrowUpRight, LayoutDashboard } from "lucide-react";
-import { motion } from "framer-motion";
-
-// --- Componenti UI Minimalisti (Senza shadcn) ---
-const CustomCard = ({ children, className = "" }) => (
-  <div className={`bg-white rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden ${className}`}>
-    {children}
-  </div>
-);
-
-const CustomButton = ({ children, onClick, className = "" }) => (
-  <button 
-    onClick={onClick}
-    className={`px-6 py-3 rounded-2xl font-medium transition-all active:scale-95 flex items-center justify-center gap-2 ${className}`}
-  >
-    {children}
-  </button>
-);
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Users, ShoppingCart, Factory, BarChart3, Truck, Package, ArrowUpRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { carichiApi } from '@/lib/api';
 
 const menuItems = [
-  { title: "Clienti", desc: "Anagrafica e contatti", icon: Users, color: "bg-blue-50 text-blue-600", stats: "1.2k" },
-  { title: "Ordini", desc: "Storico e nuovi inserimenti", icon: ShoppingCart, color: "bg-emerald-50 text-emerald-600", stats: "+12" },
-  { title: "Mulini", desc: "Gestione impianti fornitori", icon: Factory, color: "bg-orange-50 text-orange-600", stats: "8" },
-  { title: "Statistiche", desc: "Report vendite", icon: BarChart3, color: "bg-purple-50 text-purple-600", stats: "Top" },
+  { 
+    to: '/clienti',
+    title: 'Clienti', 
+    desc: 'Anagrafica e prezzi', 
+    icon: Users, 
+    color: 'bg-blue-50 text-blue-600',
+  },
+  { 
+    to: '/ordini',
+    title: 'Ordini', 
+    desc: 'Inserimento e storico', 
+    icon: ShoppingCart, 
+    color: 'bg-emerald-50 text-emerald-600',
+  },
+  { 
+    to: '/mulini',
+    title: 'Mulini', 
+    desc: 'Fornitori e prodotti', 
+    icon: Factory, 
+    color: 'bg-orange-50 text-orange-600',
+  },
+  { 
+    to: '/statistiche',
+    title: 'Statistiche', 
+    desc: 'Provvigioni e report', 
+    icon: BarChart3, 
+    color: 'bg-purple-50 text-purple-600',
+  },
 ];
 
 export default function Home() {
+  const [carichiAperti, setCarichiAperti] = useState([]);
+  const [loadingCarichi, setLoadingCarichi] = useState(true);
+
+  useEffect(() => {
+    caricaCarichiAperti();
+  }, []);
+
+  const caricaCarichiAperti = async () => {
+    try {
+      const { data } = await carichiApi.aperti();
+      setCarichiAperti(data);
+    } catch (error) {
+      console.error('Errore caricamento carichi:', error);
+    } finally {
+      setLoadingCarichi(false);
+    }
+  };
+
+  const oggi = new Date();
+  const opzioniData = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+  const dataFormattata = oggi.toLocaleDateString('it-IT', opzioniData);
+
   return (
-    <div className="min-h-screen bg-[#f8f9fb] p-6 md:p-12 font-sans antialiased text-slate-900">
-      
-      {/* Header Sleek */}
-      <header className="max-w-6xl mx-auto mb-16 flex justify-between items-end">
-        <div>
-          <div className="flex items-center gap-2 mb-3 text-slate-400">
-            <LayoutDashboard size={18} />
-            <span className="text-xs font-bold uppercase tracking-widest">Corrado Irlando</span>
-          </div>
-          <h1 className="text-5xl font-black tracking-tight">Dashboard</h1>
-        </div>
-        <div className="hidden md:block text-right">
-          <p className="text-sm font-bold text-slate-800 uppercase tracking-tighter">10 Febbraio 2026</p>
-          <div className="h-1 w-12 bg-slate-900 ml-auto mt-1" />
-        </div>
+    <div className="p-4 md:p-8 max-w-4xl mx-auto">
+      {/* Header */}
+      <header className="mb-8">
+        <p className="text-slate-400 text-sm font-medium capitalize">{dataFormattata}</p>
+        <h1 className="text-3xl md:text-4xl font-black tracking-tight mt-1">
+          Buongiorno 👋
+        </h1>
       </header>
 
-      {/* Grid Moderna */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* Carichi Aperti Alert */}
+      {!loadingCarichi && carichiAperti.length > 0 && (
+        <Link 
+          to="/carichi"
+          className="block mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl hover:bg-amber-100 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-200 rounded-xl">
+              <Truck size={20} className="text-amber-700" />
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-amber-900">
+                {carichiAperti.length} carich{carichiAperti.length === 1 ? 'o' : 'i'} apert{carichiAperti.length === 1 ? 'o' : 'i'}
+              </p>
+              <p className="text-sm text-amber-700">
+                {carichiAperti.reduce((sum, c) => sum + parseFloat(c.totale_quintali || 0), 0).toFixed(0)} quintali caricati
+              </p>
+            </div>
+            <ArrowUpRight size={20} className="text-amber-600" />
+          </div>
+        </Link>
+      )}
+
+      {/* Menu Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         {menuItems.map((item, i) => (
           <motion.div
-            key={i}
+            key={item.to}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
           >
-            <CustomCard className="group hover:border-slate-300 transition-colors duration-500">
-              <div className="p-10 flex flex-col h-full">
-                <div className="flex justify-between items-start mb-12">
-                  <div className={`p-5 rounded-3xl ${item.color} group-hover:rotate-6 transition-transform duration-300`}>
-                    <item.icon size={32} strokeWidth={1.5} />
-                  </div>
-                  <span className="text-4xl font-black text-slate-100 group-hover:text-slate-200 transition-colors">
-                    0{i + 1}
-                  </span>
+            <Link
+              to={item.to}
+              className="block bg-white rounded-2xl p-5 border border-slate-100 hover:border-slate-300 hover:shadow-lg transition-all group"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className={`p-3 rounded-2xl ${item.color} group-hover:scale-110 transition-transform`}>
+                  <item.icon size={24} strokeWidth={1.5} />
                 </div>
-
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold mb-2">{item.title}</h2>
-                  <p className="text-slate-500 leading-relaxed max-w-[200px]">
-                    {item.desc}
-                  </p>
-                </div>
-
-                <div className="mt-10 flex items-center justify-between">
-                  <span className="font-mono text-sm font-bold opacity-40 uppercase tracking-widest">
-                    Stats: {item.stats}
-                  </span>
-                  <CustomButton className="bg-slate-900 text-white hover:pr-8 hover:bg-black group/btn relative overflow-hidden">
-                    Entra
-                    <ArrowUpRight size={18} className="transition-transform group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1" />
-                  </CustomButton>
-                </div>
+                <ArrowUpRight 
+                  size={20} 
+                  className="text-slate-300 group-hover:text-slate-500 transition-colors" 
+                />
               </div>
-            </CustomCard>
+              <h2 className="text-xl font-bold mb-1">{item.title}</h2>
+              <p className="text-slate-500 text-sm">{item.desc}</p>
+            </Link>
           </motion.div>
         ))}
       </div>
 
-      {/* Footer / Status Bar */}
-      <footer className="max-w-6xl mx-auto mt-20 pt-8 border-t border-slate-200 flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-        <span>System Status: Optimal</span>
-        <span>© 2026</span>
+      {/* Quick Actions */}
+      <div className="bg-white rounded-2xl border border-slate-100 p-5">
+        <h3 className="font-bold text-sm text-slate-400 uppercase tracking-wider mb-4">
+          Azioni Rapide
+        </h3>
+        <div className="grid grid-cols-2 gap-3">
+          <Link
+            to="/ordini/nuovo"
+            className="flex items-center gap-3 p-4 bg-slate-900 text-white rounded-xl hover:bg-black transition-colors"
+          >
+            <Package size={20} />
+            <span className="font-medium">Nuovo Ordine</span>
+          </Link>
+          <Link
+            to="/carichi"
+            className="flex items-center gap-3 p-4 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors"
+          >
+            <Truck size={20} />
+            <span className="font-medium">Carichi</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="mt-12 pt-6 border-t border-slate-100 text-center">
+        <p className="text-xs text-slate-400">
+          Gestionale Farina v1.0 · Corrado Irlando
+        </p>
       </footer>
     </div>
   );
