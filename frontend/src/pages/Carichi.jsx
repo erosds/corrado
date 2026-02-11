@@ -519,7 +519,7 @@ export default function Carichi() {
         <div>
           <h1 className="text-4xl font-black">Planner</h1>
           <p className="text-slate-500 text-sm mt-1">
-             in attesa · ritirati
+            {carichiBozza.filter(c => c.ordini.reduce((sum, o) => sum + parseFloat(o.totale_quintali), 0) < 280).length} da accoppiare · {carichiBozza.filter(c => c.ordini.reduce((sum, o) => sum + parseFloat(o.totale_quintali), 0) >= 280).length + ordiniGrandi.length} completi
           </p>
         </div>
         <Link
@@ -532,7 +532,7 @@ export default function Carichi() {
       </div>
 
       {/* Filtro Mulini */}
-      <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
         <button
           onClick={() => setFiltroMulini([])}
           className={`flex-shrink-0 px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 ${filtroMulini.length === 0
@@ -543,14 +543,14 @@ export default function Carichi() {
           <Factory size={16} />
           Tutti i mulini
         </button>
-        <div className="w-px h-8 bg-slate-500 flex-shrink-0" />
+        <div className="w-px h-8 bg-slate-300 flex-shrink-0" />
         {mulini.map(m => (
           <button
             key={m.id}
             onClick={() => setFiltroMulini(prev =>
               prev.includes(m.id) ? prev.filter(id => id !== m.id) : [...prev, m.id]
             )}
-            className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${filtroMulini.includes(m.id)
+            className={`flex-shrink-0 px-4 py-2 rounded-xl font-medium transition-colors ${filtroMulini.includes(m.id)
               ? 'bg-slate-900 text-white'
               : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
               }`}

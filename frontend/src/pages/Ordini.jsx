@@ -250,7 +250,7 @@ export default function Ordini() {
             <Factory size={16} />
             Tutti i mulini
           </button>
-          <div className="w-px h-8 bg-slate-500 flex-shrink-0" />
+          <div className="w-px h-8 bg-slate-300 flex-shrink-0" />
           {mulini.map(mulino => (
             <button
               key={mulino.id}
