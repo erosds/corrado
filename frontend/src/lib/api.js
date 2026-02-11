@@ -62,7 +62,7 @@ export const carichiApi = {
   aperti: () => api.get('/carichi/aperti'), 
   dettaglio: (id) => api.get(`/carichi/${id}`), 
   crea: (data) => api.post('/carichi/', data),
-  aggiorna: (id, data) => api.put(`/carichi/${id}`), 
+  aggiorna: (id, data) => api.put(`/carichi/${id}`, data),
   elimina: (id) => api.delete(`/carichi/${id}`), 
   aggiungiOrdine: (caricoId, ordineId) => 
     api.post(`/carichi/${caricoId}/aggiungi-ordine/${ordineId}`), 

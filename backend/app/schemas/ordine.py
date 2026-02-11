@@ -99,6 +99,7 @@ class OrdineList(BaseModel):
     stato: str
     trasportatore_id: Optional[int] = None
     trasportatore_nome: Optional[str] = None
+    carico_id: Optional[int] = None
     totale_quintali: Optional[Decimal] = None
     totale_importo: Optional[Decimal] = None
     righe: List[RigaOrdineLista] = []  # Righe con dettagli prodotto/mulino

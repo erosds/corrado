@@ -9,7 +9,7 @@ from app.models.carico import Carico
 from app.models.ordine import Ordine, RigaOrdine
 from app.models.trasportatore import Trasportatore
 from app.models.cliente import Cliente
-from app.schemas.carico import CaricoCreate, CaricoUpdate, CaricoRead, CaricoDettaglio, CaricoList
+from app.schemas.carico import CaricoCreate, CaricoUpdate, CaricoRead, CaricoList
 
 router = APIRouter()
 
@@ -77,62 +77,6 @@ def lista_carichi(
 def lista_carichi_aperti(db: Session = Depends(get_db)):
     """Lista solo carichi aperti - utile per vista rapida da mobile"""
     return lista_carichi(stato=None, tipo_carico=None, solo_aperti=True, db=db)
-
-
-@router.get("/{carico_id}", response_model=CaricoDettaglio)
-def get_carico(carico_id: int, db: Session = Depends(get_db)):
-    """Dettaglio carico con tutti gli ordini inclusi"""
-    carico = db.query(Carico).filter(Carico.id == carico_id).first()
-    if not carico:
-        raise HTTPException(status_code=404, detail="Carico non trovato")
-    
-    # Ottieni ordini del carico
-    ordini = db.query(Ordine).filter(Ordine.carico_id == carico_id).all()
-    
-    ordini_list = []
-    for o in ordini:
-        cliente = db.query(Cliente).filter(Cliente.id == o.cliente_id).first()
-        totali = db.query(
-            func.sum(RigaOrdine.quintali).label("totale_quintali"),
-            func.sum(RigaOrdine.prezzo_totale).label("totale_importo")
-        ).filter(RigaOrdine.ordine_id == o.id).first()
-        
-        ordini_list.append({
-            "id": o.id,
-            "cliente_id": o.cliente_id,
-            "cliente_nome": cliente.nome if cliente else None,
-            "data_ordine": o.data_ordine,
-            "data_ritiro": o.data_ritiro,
-            "tipo_ordine": o.tipo_ordine,
-            "stato": o.stato,
-            "totale_quintali": totali.totale_quintali or Decimal("0"),
-            "totale_importo": totali.totale_importo or Decimal("0")
-        })
-    
-    trasportatore = db.query(Trasportatore).filter(
-        Trasportatore.id == carico.trasportatore_id
-    ).first() if carico.trasportatore_id else None
-    
-    totale_q = sum(o["totale_quintali"] for o in ordini_list)
-    quintali_mancanti = max(Decimal("0"), OBIETTIVO_QUINTALI - totale_q)
-    percentuale = min(Decimal("100"), (totale_q / OBIETTIVO_QUINTALI) * 100) if OBIETTIVO_QUINTALI > 0 else Decimal("0")
-    
-    return {
-        "id": carico.id,
-        "trasportatore_id": carico.trasportatore_id,
-        "trasportatore_nome": trasportatore.nome if trasportatore else None,
-        "tipo_carico": carico.tipo_carico,
-        "data_carico": carico.data_carico,
-        "stato": carico.stato,
-        "note": carico.note,
-        "creato_il": carico.creato_il,
-        "totale_quintali": totale_q,
-        "quintali_mancanti": quintali_mancanti,
-        "percentuale_completamento": round(percentuale, 1),
-        "is_completo": totale_q >= SOGLIA_MINIMA,
-        "ordini": ordini_list
-    }
-
 
 @router.post("/", response_model=CaricoRead, status_code=201)
 def crea_carico(carico: CaricoCreate, db: Session = Depends(get_db)):
@@ -216,64 +160,6 @@ def aggiorna_carico(
     db.commit()
     db.refresh(db_carico)
     return db_carico
-
-
-@router.post("/{carico_id}/aggiungi-ordine/{ordine_id}", response_model=CaricoDettaglio)
-def aggiungi_ordine_a_carico(
-    carico_id: int,
-    ordine_id: int,
-    db: Session = Depends(get_db)
-):
-    """Aggiunge un ordine esistente a un carico"""
-    carico = db.query(Carico).filter(Carico.id == carico_id).first()
-    if not carico:
-        raise HTTPException(status_code=404, detail="Carico non trovato")
-    
-    ordine = db.query(Ordine).filter(Ordine.id == ordine_id).first()
-    if not ordine:
-        raise HTTPException(status_code=404, detail="Ordine non trovato")
-    
-    if ordine.carico_id:
-        raise HTTPException(
-            status_code=400,
-            detail=f"L'ordine è già assegnato al carico {ordine.carico_id}"
-        )
-    
-    if ordine.tipo_ordine != carico.tipo_carico:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Tipo ordine ({ordine.tipo_ordine}) incompatibile con tipo carico ({carico.tipo_carico})"
-        )
-    
-    ordine.carico_id = carico_id
-    db.commit()
-    
-    return get_carico(carico_id, db)
-
-
-@router.post("/{carico_id}/rimuovi-ordine/{ordine_id}", response_model=CaricoDettaglio)
-def rimuovi_ordine_da_carico(
-    carico_id: int,
-    ordine_id: int,
-    db: Session = Depends(get_db)
-):
-    """Rimuove un ordine da un carico"""
-    carico = db.query(Carico).filter(Carico.id == carico_id).first()
-    if not carico:
-        raise HTTPException(status_code=404, detail="Carico non trovato")
-    
-    ordine = db.query(Ordine).filter(Ordine.id == ordine_id).first()
-    if not ordine:
-        raise HTTPException(status_code=404, detail="Ordine non trovato")
-    
-    if ordine.carico_id != carico_id:
-        raise HTTPException(status_code=400, detail="L'ordine non appartiene a questo carico")
-    
-    ordine.carico_id = None
-    db.commit()
-    
-    return get_carico(carico_id, db)
-
 
 @router.delete("/{carico_id}", status_code=204)
 def elimina_carico(carico_id: int, db: Session = Depends(get_db)):

@@ -31,20 +31,6 @@ class CaricoRead(CaricoBase):
     class Config:
         from_attributes = True
 
-
-class CaricoDettaglio(CaricoRead):
-    """Carico con dettagli completi"""
-    trasportatore_nome: Optional[str] = None
-    totale_quintali: Decimal = Decimal("0")
-    quintali_mancanti: Decimal = Decimal("0")
-    percentuale_completamento: Decimal = Decimal("0")
-    is_completo: bool = False
-    ordini: List[OrdineList] = []
-
-    class Config:
-        from_attributes = True
-
-
 class CaricoList(BaseModel):
     """Schema leggero per liste carichi"""
     id: int

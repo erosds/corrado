@@ -9,7 +9,6 @@ import OrdineDettaglio from './pages/OrdineDettaglio';
 import Mulini from './pages/Mulini';
 import MulinoDettaglio from './pages/MulinoDettaglio';
 import Carichi from './pages/Carichi';
-import CaricoDettaglio from './pages/CaricoDettaglio';
 import Pagamenti from './pages/Pagamenti';
 import Trasportatori from './pages/Trasportatori';
 
@@ -36,7 +35,6 @@ function App() {
           
           {/* Carichi */}
           <Route path="carichi" element={<Carichi />} />
-          <Route path="carichi/:id" element={<CaricoDettaglio />} />
           
           {/* Pagamenti */}
           <Route path="pagamenti" element={<Pagamenti />} />

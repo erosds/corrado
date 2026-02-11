@@ -99,7 +99,8 @@ def lista_ordini(
         Ordine.tipo_ordine,
         Ordine.stato,
         Ordine.trasportatore_id,
-        Trasportatore.nome.label("trasportatore_nome")
+        Trasportatore.nome.label("trasportatore_nome"),
+        Ordine.carico_id
     ).join(Cliente).outerjoin(Trasportatore)
     
     if cliente_id:
@@ -152,6 +153,7 @@ def lista_ordini(
             "stato": o.stato,
             "trasportatore_id": o.trasportatore_id,
             "trasportatore_nome": o.trasportatore_nome,
+            "carico_id": o.carico_id,
             "totale_quintali": totali.totale_quintali or Decimal("0"),
             "totale_importo": totali.totale_importo or Decimal("0"),
             "righe": righe_lista
