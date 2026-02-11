@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Package, X, Factory } from 'lucide-react';
+import { Plus, Factory } from 'lucide-react';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -95,7 +95,7 @@ export default function Carichi() {
   const handleDragEnd = (event) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
-      setOrdiniPiccoli((prev) => {
+      setOrdini((prev) => {
         const oldIndex = prev.findIndex((o) => o.id === active.id);
         const newIndex = prev.findIndex((o) => o.id === over.id);
         return arrayMove(prev, oldIndex, newIndex);
@@ -110,12 +110,6 @@ export default function Carichi() {
         : [...prev, mulinoId]
     );
   };
-
-  const formatDate = (d) => (d ? new Date(d).toLocaleDateString('it-IT') : '-');
-  const formatCurrency = (v) =>
-    new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(
-      v || 0
-    );
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
@@ -184,41 +178,41 @@ export default function Carichi() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {ordiniPiccoli.map((o) => (
-                      <SortableItem key={o.id} id={o.id}>
-                        <tr
-                          className={`hover:bg-slate-50 cursor-grab transition-colors ${
-                            caricoCompleto(o) ? 'border-2 border-emerald-500' : ''
-                          }`}
-                        >
-                          <td className="px-4 py-3 text-sm font-medium">#{o.id}</td>
-                          <td className="px-4 py-3">{o.cliente_nome}</td>
-                          <td className="px-4 py-3">{o.tipo_ordine}</td>
-                          <td className="px-4 py-3 text-right font-medium">{o.totale_quintali}</td>
-                          <td className="px-4 py-3">
-                            <input
-                              type="date"
-                              value={o.data_ritiro || ''}
-                              onChange={(e) => handleDataRitiroChange(o.id, e.target.value)}
-                              className="px-2 py-1.5 text-sm border border-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white"
-                            />
-                          </td>
-                          <td className="px-4 py-3">
-                            <select
-                              value={o.trasportatore_id || ''}
-                              onChange={(e) =>
-                                handleTrasportatoreChange(o.id, e.target.value)
-                              }
-                              className="px-2 py-1.5 text-sm border border-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white w-32"
-                            >
-                              <option value="">-</option>
-                              {trasportatori.map((t) => (
-                                <option key={t.id} value={t.id}>
-                                  {t.nome}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                        </tr>
+                      <SortableItem
+                        key={o.id}
+                        id={o.id}
+                        className={`hover:bg-slate-50 cursor-grab transition-colors ${
+                          caricoCompleto(o) ? 'border-2 border-emerald-500' : ''
+                        }`}
+                      >
+                        <td className="px-4 py-3 text-sm font-medium">#{o.id}</td>
+                        <td className="px-4 py-3">{o.cliente_nome}</td>
+                        <td className="px-4 py-3">{o.tipo_ordine}</td>
+                        <td className="px-4 py-3 text-right font-medium">{o.totale_quintali}</td>
+                        <td className="px-4 py-3">
+                          <input
+                            type="date"
+                            value={o.data_ritiro || ''}
+                            onChange={(e) => handleDataRitiroChange(o.id, e.target.value)}
+                            className="px-2 py-1.5 text-sm border border-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white"
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <select
+                            value={o.trasportatore_id || ''}
+                            onChange={(e) =>
+                              handleTrasportatoreChange(o.id, e.target.value)
+                            }
+                            className="px-2 py-1.5 text-sm border border-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white w-32"
+                          >
+                            <option value="">-</option>
+                            {trasportatori.map((t) => (
+                              <option key={t.id} value={t.id}>
+                                {t.nome}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
                       </SortableItem>
                     ))}
                   </tbody>
