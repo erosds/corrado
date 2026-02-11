@@ -58,16 +58,55 @@ export const ordiniApi = {
 
 // --- CARICHI ---
 export const carichiApi = {
+  // Lista carichi con filtri opzionali
   lista: (params = {}) => api.get('/carichi/', { params }),
-  aperti: () => api.get('/carichi/aperti'), 
-  dettaglio: (id) => api.get(`/carichi/${id}`), 
+  
+  // Lista carichi aperti (bozza + assegnato)
+  aperti: () => api.get('/carichi/aperti'),
+  
+  // Lista carichi in bozza (per composizione)
+  bozze: (params = {}) => api.get('/carichi/bozze', { params }),
+  
+  // Dettaglio singolo carico
+  dettaglio: (id) => api.get(`/carichi/${id}`),
+  
+  // Ordini contenuti nel carico
+  ordini: (id) => api.get(`/carichi/${id}/ordini`),
+  
+  // Ordini disponibili per essere aggiunti al carico
+  ordiniDisponibili: (id) => api.get(`/carichi/${id}/ordini-disponibili`),
+  
+  // Crea nuovo carico (completo)
   crea: (data) => api.post('/carichi/', data),
+  
+  // Crea carico BOZZA da ordini (drag&drop)
+  creaBozza: (data) => api.post('/carichi/bozza', data),
+  
+  // Aggiorna carico (note, trasportatore, data)
   aggiorna: (id, data) => api.put(`/carichi/${id}`, data),
-  elimina: (id) => api.delete(`/carichi/${id}`), 
+  
+  // Elimina carico
+  elimina: (id) => api.delete(`/carichi/${id}`),
+  
+  // Assegna trasportatore e data (BOZZA -> ASSEGNATO)
+  assegna: (id, data) => api.post(`/carichi/${id}/assegna`, data),
+  
+  // Aggiungi ordine a carico esistente
   aggiungiOrdine: (caricoId, ordineId) => 
-    api.post(`/carichi/${caricoId}/aggiungi-ordine/${ordineId}`), 
+    api.post(`/carichi/${caricoId}/ordini`, { ordine_id: ordineId }),
+  
+  // Rimuovi ordine da carico
   rimuoviOrdine: (caricoId, ordineId) => 
-    api.post(`/carichi/${caricoId}/rimuovi-ordine/${ordineId}`), 
+    api.delete(`/carichi/${caricoId}/ordini/${ordineId}`),
+  
+  // Segna come ritirato (ASSEGNATO -> RITIRATO)
+  ritira: (id) => api.post(`/carichi/${id}/ritira`),
+  
+  // Segna come consegnato (RITIRATO -> CONSEGNATO)
+  consegna: (id) => api.post(`/carichi/${id}/consegna`),
+  
+  // Valida ordini prima di creare carico
+  valida: (ordiniIds) => api.post('/carichi/valida', ordiniIds),
 };
 
 // --- COMPOSIZIONE CARICHI ---
@@ -86,9 +125,13 @@ export const pagamentiApi = {
   provvigioniTrimestre: (anno, trimestre) =>
     api.get('/pagamenti/provvigioni/trimestre', { params: { anno, trimestre } }),
   provvigioniOrdini: (anno, trimestre, mulino_id) =>
-    api.get('/pagamenti/provvigioni/ordini', { params: { anno, trimestre, mulino_id: mulino_id || undefined } }),
+    api.get('/pagamenti/provvigioni/ordini', { 
+      params: { anno, trimestre, mulino_id: mulino_id || undefined } 
+    }),
   provvigioniDettaglioMulino: (mulinoId, anno, trimestre) =>
-    api.get(`/pagamenti/provvigioni/dettaglio-mulino/${mulinoId}`, { params: { anno, trimestre } }),
+    api.get(`/pagamenti/provvigioni/dettaglio-mulino/${mulinoId}`, { 
+      params: { anno, trimestre } 
+    }),
   incassatoMulino: (mulinoId, params = {}) =>
     api.get(`/pagamenti/incassato-mulino/${mulinoId}`, { params }),
   vendutoPerCliente: (params = {}) =>
