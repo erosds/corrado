@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Users, ShoppingCart, Factory, Truck, BarChart3, 
+  Users, ShoppingCart, Factory, Truck, Receipt, 
   Package, ArrowUpRight, Plus, Calculator
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -80,14 +80,14 @@ export default function Home() {
       color: 'bg-cyan-50 text-cyan-600'
     },
     { 
-      to: '/statistiche', 
-      icon: BarChart3, 
-      title: 'Statistiche', 
+      to: '/pagamenti', 
+      icon: Receipt, 
+      title: 'Pagamenti', 
       desc: 'Report e analisi',
       color: 'bg-indigo-50 text-indigo-600'
     },
     { 
-      to: '/statistiche?tab=provvigioni', 
+      to: '/pagamenti?tab=provvigioni', 
       icon: Calculator, 
       title: 'Provvigioni', 
       desc: 'Calcolo provvigioni',

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Plus, User, Phone, CreditCard, ChevronRight } from 'lucide-react';
+import { Search, Plus, User, Phone, Mail, MapPin, ChevronRight, X } from 'lucide-react';
 import { clientiApi } from '@/lib/api';
+import DateHeader from '@/components/DateHeader';
 
 export default function Clienti() {
   const [clienti, setClienti] = useState([]);
@@ -26,7 +27,9 @@ export default function Clienti() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto">
+      <DateHeader />
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -50,11 +53,19 @@ export default function Clienti() {
           placeholder="Cerca cliente..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
+          className="w-full pl-12 pr-10 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
         />
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+          >
+            <X size={18} />
+          </button>
+        )}
       </div>
 
-      {/* Lista Clienti */}
+      {/* Lista */}
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -78,17 +89,107 @@ export default function Clienti() {
           )}
         </div>
       ) : (
-        <div className="space-y-3">
-          {clienti.map((cliente) => (
-            <Link
-              key={cliente.id}
-              to={`/clienti/${cliente.id}`}
-              className="block bg-white rounded-2xl p-4 border border-slate-100 hover:border-slate-300 hover:shadow-md transition-all group"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-slate-900 truncate">
+        <>
+          {/* Desktop - Tabella */}
+          <div className="hidden md:block bg-white rounded-2xl border border-slate-100 overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-100">
+                <tr>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Cliente</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Contatti</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Indirizzo</th>
+                  <th className="text-center px-4 py-3 text-sm font-semibold text-slate-600">Pedana</th>
+                  <th className="text-center px-4 py-3 text-sm font-semibold text-slate-600">Pag.</th>
+                  <th className="w-10"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {clienti.map((cliente) => (
+                  <tr
+                    key={cliente.id}
+                    onClick={() => window.location.href = `/clienti/${cliente.id}`}
+                    className="hover:bg-slate-50 cursor-pointer transition-colors"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-slate-900">{cliente.nome}</p>
+                        {cliente.riba && (
+                          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">
+                            RIBA
+                          </span>
+                        )}
+                      </div>
+                      {cliente.referente && (
+                        <p className="text-xs text-slate-500 mt-0.5">Ref. {cliente.referente}</p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="space-y-0.5">
+                        {cliente.cellulare && (
+                          <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                            <Phone size={13} className="text-slate-400" />
+                            {cliente.cellulare}
+                          </p>
+                        )}
+                        {cliente.email && (
+                          <p className="text-sm text-slate-600 flex items-center gap-1.5 truncate max-w-[220px]">
+                            <Mail size={13} className="text-slate-400 flex-shrink-0" />
+                            {cliente.email}
+                          </p>
+                        )}
+                        {!cliente.cellulare && !cliente.email && (
+                          <span className="text-sm text-slate-400">-</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {cliente.indirizzo_consegna ? (
+                        <p className="text-sm text-slate-600 flex items-center gap-1.5 truncate max-w-[250px]">
+                          <MapPin size={13} className="text-slate-400 flex-shrink-0" />
+                          {cliente.indirizzo_consegna}
+                        </p>
+                      ) : (
+                        <span className="text-sm text-slate-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      {cliente.pedana_standard ? (
+                        <span className="inline-flex px-2 py-1 text-xs font-medium rounded-lg bg-slate-100 text-slate-700">
+                          {cliente.pedana_standard}q
+                        </span>
+                      ) : (
+                        <span className="text-sm text-slate-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      {cliente.riba ? (
+                        <span className="inline-flex px-2 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-700">
+                          RIBA
+                        </span>
+                      ) : (
+                        <span className="text-sm text-slate-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <ChevronRight size={18} className="text-slate-300" />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile - Card */}
+          <div className="md:hidden space-y-3">
+            {clienti.map((cliente) => (
+              <Link
+                key={cliente.id}
+                to={`/clienti/${cliente.id}`}
+                className="block bg-white rounded-2xl p-4 border border-slate-100 hover:border-slate-300 hover:shadow-md transition-all group"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <h3 className="font-bold text-slate-900 truncate text-lg">
                       {cliente.nome}
                     </h3>
                     {cliente.riba && (
@@ -96,24 +197,45 @@ export default function Clienti() {
                         RIBA
                       </span>
                     )}
-                  </div>
-                  <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
-                    {cliente.cellulare && (
-                      <span className="flex items-center gap-1">
-                        <Phone size={14} />
-                        {cliente.cellulare}
+                    {cliente.pedana_standard && (
+                      <span className="flex-shrink-0 px-2 py-0.5 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">
+                        {cliente.pedana_standard}q
                       </span>
                     )}
                   </div>
+                  <ChevronRight
+                    className="text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0"
+                    size={20}
+                  />
                 </div>
-                <ChevronRight 
-                  className="text-slate-300 group-hover:text-slate-500 transition-colors" 
-                  size={20} 
-                />
-              </div>
-            </Link>
-          ))}
-        </div>
+
+                <div className="space-y-1 text-sm text-slate-500">
+                  {cliente.referente && (
+                    <p>Ref. {cliente.referente}</p>
+                  )}
+                  {cliente.cellulare && (
+                    <p className="flex items-center gap-1.5">
+                      <Phone size={13} className="text-slate-400" />
+                      {cliente.cellulare}
+                    </p>
+                  )}
+                  {cliente.email && (
+                    <p className="flex items-center gap-1.5 truncate">
+                      <Mail size={13} className="text-slate-400" />
+                      {cliente.email}
+                    </p>
+                  )}
+                  {cliente.indirizzo_consegna && (
+                    <p className="flex items-center gap-1.5 truncate">
+                      <MapPin size={13} className="text-slate-400" />
+                      {cliente.indirizzo_consegna}
+                    </p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Modal Nuovo Cliente */}

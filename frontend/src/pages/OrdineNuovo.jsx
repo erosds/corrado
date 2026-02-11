@@ -567,20 +567,39 @@ export default function OrdineNuovo() {
                 </div>
               </div>
 
-              {/* Data incasso (mostrata solo se compilata) */}
-              {formData.data_incasso_mulino && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Data incasso mulino (calcolata)
-                  </label>
+              {/* Data incasso mulino */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Data incasso mulino
+                </label>
+                <div className="relative">
                   <input
                     type="date"
                     value={formData.data_incasso_mulino}
                     onChange={(e) => setFormData(prev => ({ ...prev, data_incasso_mulino: e.target.value }))}
-                    className={inputClass}
+                    className={`${inputClass} ${!formData.data_incasso_mulino ? 'text-transparent' : ''}`}
                   />
+                  {!formData.data_incasso_mulino && (
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                      Nessuna
+                    </span>
+                  )}
+                  {formData.data_incasso_mulino && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, data_incasso_mulino: '' }))}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      <X size={18} />
+                    </button>
+                  )}
                 </div>
-              )}
+                {clienteSelezionato?.riba && (
+                  <p className="mt-1 text-sm text-blue-600">
+                    Calcolata automaticamente per clienti RIBA
+                  </p>
+                )}
+              </div>
 
               {/* Trasportatore */}
               <div>

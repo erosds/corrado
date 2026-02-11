@@ -70,18 +70,20 @@ export const carichiApi = {
     api.post(`/carichi/${caricoId}/rimuovi-ordine/${ordineId}`), 
 };
 
-// --- STATISTICHE ---
-export const statisticheApi = {
-  provvigioniTrimestre: (anno, trimestre) => 
-    api.get('/statistiche/provvigioni/trimestre', { params: { anno, trimestre } }),
-  provvigioniDettaglioMulino: (mulinoId, anno, trimestre) => 
-    api.get(`/statistiche/provvigioni/dettaglio-mulino/${mulinoId}`, { params: { anno, trimestre } }), 
-  incassatoMulino: (mulinoId, params = {}) => 
-    api.get(`/statistiche/incassato-mulino/${mulinoId}`, { params }), 
-  vendutoPerCliente: (params = {}) => 
-    api.get('/statistiche/venduto-per-cliente/', { params }),
-  vendutoPerProdotto: (params = {}) => 
-    api.get('/statistiche/venduto-per-prodotto/', { params }),
+// --- PAGAMENTI ---
+export const pagamentiApi = {
+  provvigioniTrimestre: (anno, trimestre) =>
+    api.get('/pagamenti/provvigioni/trimestre', { params: { anno, trimestre } }),
+  provvigioniOrdini: (anno, trimestre, mulino_id) =>
+    api.get('/pagamenti/provvigioni/ordini', { params: { anno, trimestre, mulino_id: mulino_id || undefined } }),
+  provvigioniDettaglioMulino: (mulinoId, anno, trimestre) =>
+    api.get(`/pagamenti/provvigioni/dettaglio-mulino/${mulinoId}`, { params: { anno, trimestre } }),
+  incassatoMulino: (mulinoId, params = {}) =>
+    api.get(`/pagamenti/incassato-mulino/${mulinoId}`, { params }),
+  vendutoPerCliente: (params = {}) =>
+    api.get('/pagamenti/venduto-per-cliente/', { params }),
+  vendutoPerProdotto: (params = {}) =>
+    api.get('/pagamenti/venduto-per-prodotto/', { params }),
 };
 
 export default api;

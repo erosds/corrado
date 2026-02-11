@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import {
   Home, Users, ShoppingCart, Factory, Truck, BarChart3,
-  Menu, X, ChevronLeft
+  Menu, X, ChevronLeft, Receipt
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -12,7 +12,7 @@ const navItems = [
   { to: '/clienti', icon: Users, label: 'Clienti' },
   { to: '/mulini', icon: Factory, label: 'Mulini' },
   { to: '/trasportatori', icon: Truck, label: 'Trasportatori' },
-  { to: '/statistiche', icon: BarChart3, label: 'Stats' },
+  { to: '/pagamenti', icon: Receipt, label: 'Pagamenti' },
 ];
 
 export default function Layout() {

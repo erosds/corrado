@@ -40,6 +40,38 @@ class ProvvigioneDettaglio(BaseModel):
     provvigione_calcolata: Decimal
 
 
+class RigaProvvigione(BaseModel):
+    id: int
+    prodotto_nome: str
+    prodotto_tipologia: Optional[str] = None
+    quintali: Decimal
+    prezzo_quintale: Decimal
+    prezzo_totale: Decimal
+    tipo_provvigione: str
+    valore_provvigione: Decimal
+    provvigione_calcolata: Decimal
+
+
+class OrdineProvvigione(BaseModel):
+    id: int
+    cliente_nome: str
+    data_ordine: date
+    data_ritiro: Optional[date] = None
+    data_incasso_mulino: Optional[date] = None
+    tipo_ordine: str
+    totale_quintali: Decimal
+    totale_importo: Decimal
+    totale_provvigione: Decimal
+    righe: List[RigaProvvigione]
+
+
+class ProvvigioniOrdiniResponse(BaseModel):
+    totale_provvigioni: Decimal
+    totale_incassato: Decimal
+    totale_quintali: Decimal
+    ordini: List[OrdineProvvigione]
+
+
 class VendutoCliente(BaseModel):
     cliente_id: int
     cliente_nome: str
@@ -175,6 +207,98 @@ def provvigioni_trimestre(
         totale_incassato=totale_incassato,
         totale_provvigioni=totale_provvigioni,
         provvigioni_per_mulino=sorted(provvigioni_per_mulino, key=lambda x: x.mulino_nome)
+    )
+
+
+@router.get("/provvigioni/ordini", response_model=ProvvigioniOrdiniResponse)
+def provvigioni_ordini(
+    anno: int = Query(...),
+    trimestre: int = Query(..., ge=1, le=4),
+    mulino_id: Optional[int] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """
+    Lista ordini del trimestre con provvigioni calcolate per ogni riga.
+    Filtra opzionalmente per mulino.
+    """
+    data_inizio, data_fine = get_trimestre_date(anno, trimestre)
+
+    ordini_query = db.query(Ordine).filter(
+        Ordine.data_incasso_mulino >= data_inizio,
+        Ordine.data_incasso_mulino <= data_fine
+    )
+
+    if mulino_id:
+        ordini_query = ordini_query.filter(
+            Ordine.righe.any(RigaOrdine.mulino_id == mulino_id)
+        )
+
+    ordini = ordini_query.all()
+
+    totale_provvigioni = Decimal("0")
+    totale_incassato = Decimal("0")
+    totale_quintali = Decimal("0")
+    ordini_result = []
+
+    for ordine in ordini:
+        cliente = db.query(Cliente).filter(Cliente.id == ordine.cliente_id).first()
+        righe_result = []
+        ordine_provvigione = Decimal("0")
+        ordine_quintali = Decimal("0")
+        ordine_importo = Decimal("0")
+
+        righe = db.query(RigaOrdine).filter(RigaOrdine.ordine_id == ordine.id)
+        if mulino_id:
+            righe = righe.filter(RigaOrdine.mulino_id == mulino_id)
+        righe = righe.all()
+
+        for riga in righe:
+            prodotto = db.query(Prodotto).filter(Prodotto.id == riga.prodotto_id).first()
+            if not prodotto:
+                continue
+
+            provvigione = calcola_provvigione_riga(riga, prodotto)
+
+            righe_result.append(RigaProvvigione(
+                id=riga.id,
+                prodotto_nome=prodotto.nome,
+                prodotto_tipologia=prodotto.tipologia,
+                quintali=riga.quintali,
+                prezzo_quintale=riga.prezzo_quintale,
+                prezzo_totale=riga.prezzo_totale,
+                tipo_provvigione=prodotto.tipo_provvigione,
+                valore_provvigione=prodotto.valore_provvigione,
+                provvigione_calcolata=provvigione
+            ))
+
+            ordine_provvigione += provvigione
+            ordine_quintali += riga.quintali
+            ordine_importo += riga.prezzo_totale
+
+        ordini_result.append(OrdineProvvigione(
+            id=ordine.id,
+            cliente_nome=cliente.nome if cliente else "?",
+            data_ordine=ordine.data_ordine,
+            data_ritiro=ordine.data_ritiro,
+            data_incasso_mulino=ordine.data_incasso_mulino,
+            tipo_ordine=ordine.tipo_ordine,
+            totale_quintali=ordine_quintali,
+            totale_importo=ordine_importo,
+            totale_provvigione=ordine_provvigione,
+            righe=righe_result
+        ))
+
+        totale_provvigioni += ordine_provvigione
+        totale_incassato += ordine_importo
+        totale_quintali += ordine_quintali
+
+    ordini_result.sort(key=lambda x: x.data_ordine, reverse=True)
+
+    return ProvvigioniOrdiniResponse(
+        totale_provvigioni=totale_provvigioni,
+        totale_incassato=totale_incassato,
+        totale_quintali=totale_quintali,
+        ordini=ordini_result
     )
 
 

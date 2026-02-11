@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import clienti, mulini, prodotti, trasportatori, ordini, carichi, statistiche
+from app.routers import clienti, mulini, prodotti, trasportatori, ordini, carichi, pagamenti
 
 app = FastAPI(
     title="Gestionale Farina - Corrado",
@@ -30,7 +30,7 @@ app.include_router(prodotti.router, prefix="/api/prodotti", tags=["Prodotti"])
 app.include_router(trasportatori.router, prefix="/api/trasportatori", tags=["Trasportatori"])
 app.include_router(ordini.router, prefix="/api/ordini", tags=["Ordini"])
 app.include_router(carichi.router, prefix="/api/carichi", tags=["Carichi"])
-app.include_router(statistiche.router, prefix="/api/statistiche", tags=["Statistiche"])
+app.include_router(pagamenti.router, prefix="/api/pagamenti", tags=["Pagamenti"])
 
 
 @app.get("/", tags=["Root"])

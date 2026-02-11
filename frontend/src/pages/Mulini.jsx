@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Plus, Factory, Package, ChevronRight, Phone, Mail } from 'lucide-react';
+import { Search, Plus, Factory, Phone, Mail, MapPin, ChevronRight, X } from 'lucide-react';
 import { muliniApi } from '@/lib/api';
+import DateHeader from '@/components/DateHeader';
 
 export default function Mulini() {
   const [mulini, setMulini] = useState([]);
@@ -26,7 +27,9 @@ export default function Mulini() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto">
+      <DateHeader />
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -50,11 +53,19 @@ export default function Mulini() {
           placeholder="Cerca mulino..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
+          className="w-full pl-12 pr-10 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
         />
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+          >
+            <X size={18} />
+          </button>
+        )}
       </div>
 
-      {/* Lista Mulini */}
+      {/* Lista */}
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -78,48 +89,123 @@ export default function Mulini() {
           )}
         </div>
       ) : (
-        <div className="space-y-3">
-          {mulini.map((mulino) => (
-            <Link
-              key={mulino.id}
-              to={`/mulini/${mulino.id}`}
-              className="block bg-white rounded-2xl p-4 border border-slate-100 hover:border-slate-300 hover:shadow-md transition-all group"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+        <>
+          {/* Desktop - Tabella */}
+          <div className="hidden md:block bg-white rounded-2xl border border-slate-100 overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-100">
+                <tr>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Mulino</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Indirizzo Ritiro</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Telefono</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Email</th>
+                  <th className="w-10"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {mulini.map((mulino) => (
+                  <tr
+                    key={mulino.id}
+                    onClick={() => window.location.href = `/mulini/${mulino.id}`}
+                    className="hover:bg-slate-50 cursor-pointer transition-colors"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-orange-100 rounded-xl flex-shrink-0">
+                          <Factory size={18} className="text-orange-600" />
+                        </div>
+                        <p className="font-bold text-slate-900">{mulino.nome}</p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {mulino.indirizzo_ritiro ? (
+                        <p className="text-sm text-slate-600 flex items-center gap-1.5 truncate max-w-[250px]">
+                          <MapPin size={13} className="text-slate-400 flex-shrink-0" />
+                          {mulino.indirizzo_ritiro}
+                        </p>
+                      ) : (
+                        <span className="text-sm text-slate-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {mulino.telefono ? (
+                        <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                          <Phone size={13} className="text-slate-400" />
+                          {mulino.telefono}
+                        </p>
+                      ) : (
+                        <span className="text-sm text-slate-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {mulino.email1 ? (
+                        <div className="space-y-0.5">
+                          <p className="text-sm text-slate-600 flex items-center gap-1.5 truncate max-w-[220px]">
+                            <Mail size={13} className="text-slate-400 flex-shrink-0" />
+                            {mulino.email1}
+                          </p>
+                          {mulino.email2 && (
+                            <p className="text-xs text-slate-400 pl-5 truncate max-w-[220px]">{mulino.email2}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-slate-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <ChevronRight size={18} className="text-slate-300" />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile - Card */}
+          <div className="md:hidden space-y-3">
+            {mulini.map((mulino) => (
+              <Link
+                key={mulino.id}
+                to={`/mulini/${mulino.id}`}
+                className="block bg-white rounded-2xl p-4 border border-slate-100 hover:border-slate-300 hover:shadow-md transition-all group"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
                     <div className="p-2 bg-orange-100 rounded-xl">
                       <Factory size={20} className="text-orange-600" />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-slate-900">
-                        {mulino.nome}
-                      </h3>
-                      <div className="flex items-center gap-3 mt-1 text-sm text-slate-500">
-                        {mulino.telefono && (
-                          <span className="flex items-center gap-1">
-                            <Phone size={12} />
-                            {mulino.telefono}
-                          </span>
-                        )}
-                        {mulino.email1 && (
-                          <span className="flex items-center gap-1">
-                            <Mail size={12} />
-                            {mulino.email1}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <h3 className="font-bold text-slate-900 text-lg">{mulino.nome}</h3>
                   </div>
+                  <ChevronRight
+                    className="text-slate-300 group-hover:text-slate-500 transition-colors"
+                    size={20}
+                  />
                 </div>
-                <ChevronRight 
-                  className="text-slate-300 group-hover:text-slate-500 transition-colors" 
-                  size={20} 
-                />
-              </div>
-            </Link>
-          ))}
-        </div>
+
+                <div className="space-y-1 text-sm text-slate-500 pl-12">
+                  {mulino.indirizzo_ritiro && (
+                    <p className="flex items-center gap-1.5 truncate">
+                      <MapPin size={13} className="text-slate-400" />
+                      {mulino.indirizzo_ritiro}
+                    </p>
+                  )}
+                  {mulino.telefono && (
+                    <p className="flex items-center gap-1.5">
+                      <Phone size={13} className="text-slate-400" />
+                      {mulino.telefono}
+                    </p>
+                  )}
+                  {mulino.email1 && (
+                    <p className="flex items-center gap-1.5 truncate">
+                      <Mail size={13} className="text-slate-400" />
+                      {mulino.email1}
+                    </p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Modal Nuovo Mulino */}

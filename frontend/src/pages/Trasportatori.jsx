@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Truck, Phone, Edit, Trash2 } from 'lucide-react';
+import { Search, Plus, Truck, Phone, Edit, Trash2, X } from 'lucide-react';
 import { trasportatoriApi } from '@/lib/api';
+import DateHeader from '@/components/DateHeader';
 
 export default function Trasportatori() {
   const [trasportatori, setTrasportatori] = useState([]);
@@ -27,7 +28,7 @@ export default function Trasportatori() {
 
   const handleDelete = async (id) => {
     if (!confirm('Eliminare questo trasportatore?')) return;
-    
+
     try {
       await trasportatoriApi.elimina(id);
       caricaTrasportatori();
@@ -38,7 +39,9 @@ export default function Trasportatori() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto">
+      <DateHeader />
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -65,11 +68,19 @@ export default function Trasportatori() {
           placeholder="Cerca trasportatore..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
+          className="w-full pl-12 pr-10 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
         />
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+          >
+            <X size={18} />
+          </button>
+        )}
       </div>
 
-      {/* Lista Trasportatori */}
+      {/* Lista */}
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -93,60 +104,133 @@ export default function Trasportatori() {
           )}
         </div>
       ) : (
-        <div className="space-y-3">
-          {trasportatori.map((trasportatore) => (
-            <div
-              key={trasportatore.id}
-              className="bg-white rounded-2xl p-4 border border-slate-100 hover:border-slate-200 transition-colors"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-slate-100 rounded-xl">
-                    <Truck size={20} className="text-slate-600" />
+        <>
+          {/* Desktop - Tabella */}
+          <div className="hidden md:block bg-white rounded-2xl border border-slate-100 overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-100">
+                <tr>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Trasportatore</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Telefono</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Note</th>
+                  <th className="text-center px-4 py-3 text-sm font-semibold text-slate-600">Azioni</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {trasportatori.map((trasportatore) => (
+                  <tr key={trasportatore.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-slate-100 rounded-xl flex-shrink-0">
+                          <Truck size={18} className="text-slate-600" />
+                        </div>
+                        <p className="font-bold text-slate-900">{trasportatore.nome}</p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {trasportatore.telefono ? (
+                        <a
+                          href={`tel:${trasportatore.telefono}`}
+                          className="text-sm text-slate-600 flex items-center gap-1.5 hover:text-slate-900"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Phone size={13} className="text-slate-400" />
+                          {trasportatore.telefono}
+                        </a>
+                      ) : (
+                        <span className="text-sm text-slate-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {trasportatore.note ? (
+                        <p className="text-sm text-slate-500 truncate max-w-[300px]">{trasportatore.note}</p>
+                      ) : (
+                        <span className="text-sm text-slate-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => {
+                            setTrasportatoreEdit(trasportatore);
+                            setShowForm(true);
+                          }}
+                          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                          title="Modifica"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(trasportatore.id)}
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Elimina"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile - Card */}
+          <div className="md:hidden space-y-3">
+            {trasportatori.map((trasportatore) => (
+              <div
+                key={trasportatore.id}
+                className="bg-white rounded-2xl p-4 border border-slate-100"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-slate-100 rounded-xl">
+                      <Truck size={20} className="text-slate-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-lg">
+                        {trasportatore.nome}
+                      </h3>
+                      {trasportatore.telefono && (
+                        <a
+                          href={`tel:${trasportatore.telefono}`}
+                          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"
+                        >
+                          <Phone size={13} className="text-slate-400" />
+                          {trasportatore.telefono}
+                        </a>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900">
-                      {trasportatore.nome}
-                    </h3>
-                    {trasportatore.telefono && (
-                      <a 
-                        href={`tel:${trasportatore.telefono}`}
-                        className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700"
-                      >
-                        <Phone size={12} />
-                        {trasportatore.telefono}
-                      </a>
-                    )}
+
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => {
+                        setTrasportatoreEdit(trasportatore);
+                        setShowForm(true);
+                      }}
+                      className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                    >
+                      <Edit size={18} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(trasportatore.id)}
+                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
                 </div>
 
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => {
-                      setTrasportatoreEdit(trasportatore);
-                      setShowForm(true);
-                    }}
-                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
-                    <Edit size={18} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(trasportatore.id)}
-                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
+                {trasportatore.note && (
+                  <p className="mt-2 text-sm text-slate-500 pl-12">
+                    {trasportatore.note}
+                  </p>
+                )}
               </div>
-
-              {trasportatore.note && (
-                <p className="mt-2 text-sm text-slate-500 pl-12">
-                  {trasportatore.note}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Modal Form */}

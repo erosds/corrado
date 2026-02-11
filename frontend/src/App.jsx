@@ -10,7 +10,7 @@ import Mulini from './pages/Mulini';
 import MulinoDettaglio from './pages/MulinoDettaglio';
 import Carichi from './pages/Carichi';
 import CaricoDettaglio from './pages/CaricoDettaglio';
-import Statistiche from './pages/Statistiche';
+import Pagamenti from './pages/Pagamenti';
 import Trasportatori from './pages/Trasportatori';
 
 function App() {
@@ -38,8 +38,8 @@ function App() {
           <Route path="carichi" element={<Carichi />} />
           <Route path="carichi/:id" element={<CaricoDettaglio />} />
           
-          {/* Statistiche */}
-          <Route path="statistiche" element={<Statistiche />} />
+          {/* Pagamenti */}
+          <Route path="pagamenti" element={<Pagamenti />} />
           
           {/* Trasportatori */}
           <Route path="trasportatori" element={<Trasportatori />} />
