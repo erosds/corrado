@@ -4,7 +4,6 @@ import { Plus, Factory, Unlink, AlertCircle, GripVertical, Loader2, Check, Truck
 import { CSS } from '@dnd-kit/utilities';
 import { ordiniApi, trasportatoriApi, muliniApi, carichiApi } from '@/lib/api';
 import DateHeader from '@/components/DateHeader';
-
 import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';  // AGGIUNGI QUESTO
@@ -517,33 +516,41 @@ export default function Carichi() {
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-black tracking-tight">Carichi</h1>
-        {updating && (
-          <div className="flex items-center gap-2 text-blue-600">
-            <Loader2 size={16} className="animate-spin" />
-            <span className="text-sm">Salvataggio...</span>
-          </div>
-        )}
+        <div>
+          <h1 className="text-4xl font-black">Planner</h1>
+          <p className="text-slate-500 text-sm mt-1">
+             in attesa · ritirati
+          </p>
+        </div>
+        <Link
+          to="/ordini/nuovo"
+          className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl font-medium hover:bg-black transition-colors"
+        >
+          <Plus size={18} />
+          <span className="hidden sm:inline">Nuovo</span>
+        </Link>
       </div>
 
       {/* Filtro Mulini */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
         <button
           onClick={() => setFiltroMulini([])}
-          className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all ${filtroMulini.length === 0
+          className={`flex-shrink-0 px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 ${filtroMulini.length === 0
             ? 'bg-slate-900 text-white'
             : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
             }`}
         >
-          Tutti
+          <Factory size={16} />
+          Tutti i mulini
         </button>
+        <div className="w-px h-8 bg-slate-500 flex-shrink-0" />
         {mulini.map(m => (
           <button
             key={m.id}
             onClick={() => setFiltroMulini(prev =>
               prev.includes(m.id) ? prev.filter(id => id !== m.id) : [...prev, m.id]
             )}
-            className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all ${filtroMulini.includes(m.id)
+            className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${filtroMulini.includes(m.id)
               ? 'bg-slate-900 text-white'
               : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
               }`}
@@ -564,7 +571,7 @@ export default function Carichi() {
           {/* SEZIONE 1: Accoppiamento Ordini (<280q) */}
           <div className="mb-12">
             <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">
-              Accoppiamento Ordini (&lt;280q) — Trascina per unire
+              Gestione Ordini
             </h2>
 
             {carichiFiltrati.length === 0 ? (
@@ -573,7 +580,7 @@ export default function Carichi() {
                 <p className="text-slate-500">Nessun ordine da accoppiare</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto bg-white rounded-2xl border border-slate-200">
                 <DndContext
                   collisionDetection={closestCenter}
                   onDragStart={(event) => setActiveId(event.active.id)}
@@ -583,7 +590,7 @@ export default function Carichi() {
                   }}
                   onDragCancel={() => setActiveId(null)}
                 >
-                  <table className="w-full bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                  <table className="w-full bg-white rounded-2xl border border-slate-100 overflow-hidden">
                     <thead className="bg-slate-50 border-b border-slate-100">
                       <tr className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                         <th className="px-4 py-2 w-10"></th>
@@ -626,7 +633,7 @@ export default function Carichi() {
           {/* SEZIONE 2: Carichi Diretti (>=280q) */}
           <div>
             <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">
-              Carichi Diretti (≥280q)
+              Ordini completi
             </h2>
 
             {ordiniGrandi.length === 0 ? (

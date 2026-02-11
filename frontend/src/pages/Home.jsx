@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { carichiApi } from '@/lib/api';
+import DateHeader from '@/components/DateHeader';
+
 
 export default function Home() {
   const [carichiAperti, setCarichiAperti] = useState([]);
@@ -96,38 +98,15 @@ export default function Home() {
   ];
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto">
-      {/* Data corrente */}
-      <div className="mb-2 text-sm text-slate-500">
-        {dataCapitalizzata}
-      </div>
+    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+      <DateHeader />
 
       {/* Header */}
-      <div className="mb-5">
-        <h1 className="text-3xl md:text-4xl font-black tracking-tight">
+      <div className="mb-6">
+        <h1 className="text-4xl font-black">
           Home
         </h1>
       </div>
-
-      {/* Alert Carichi Aperti */}
-      {carichiAperti.length > 0 && (
-        <Link
-          to="/carichi"
-          className="block mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl hover:bg-amber-100 transition-colors"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-bold text-amber-800">
-                {carichiAperti.length} caric{carichiAperti.length === 1 ? 'o' : 'i'} apert{carichiAperti.length === 1 ? 'o' : 'i'}
-              </p>
-              <p className="text-sm text-amber-700">
-                {carichiAperti.reduce((sum, c) => sum + parseFloat(c.totale_quintali || 0), 0).toFixed(0)} quintali caricati
-              </p>
-            </div>
-            <ArrowUpRight size={20} className="text-amber-600" />
-          </div>
-        </Link>
-      )}
 
       {/* Menu Grid - 4 colonne desktop, 2 mobile */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

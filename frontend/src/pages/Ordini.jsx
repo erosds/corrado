@@ -217,12 +217,13 @@ export default function Ordini() {
   const ordiniRitirati = ordini.filter(o => calcolaStato(o.data_ritiro) === 'ritirato').length;
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto">
       <DateHeader />
 
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight">Ordini</h1>
+          <h1 className="text-4xl font-black">Ordini</h1>
           <p className="text-slate-500 text-sm mt-1">
             {ordiniInseriti} in attesa · {ordiniRitirati} ritirati
           </p>
@@ -249,7 +250,7 @@ export default function Ordini() {
             <Factory size={16} />
             Tutti i mulini
           </button>
-          <div className="w-px h-8 bg-slate-200 flex-shrink-0" />
+          <div className="w-px h-8 bg-slate-500 flex-shrink-0" />
           {mulini.map(mulino => (
             <button
               key={mulino.id}
@@ -319,7 +320,7 @@ export default function Ordini() {
       ) : (
         <>
           {/* Vista Desktop - Tabella */}
-          <div className="hidden md:block bg-white rounded-2xl border border-slate-100 overflow-hidden">
+          <div className="hidden md:block bg-white rounded-2xl border border-slate-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-slate-50 border-b border-slate-100">
@@ -540,7 +541,7 @@ export default function Ordini() {
           {/* Vista Mobile - Card */}
           <div className="md:hidden space-y-3">
             {ordiniFiltrati.map((ordine) => (
-              <div key={ordine.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+              <div key={ordine.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                 <div className="p-4" onClick={() => toggleEspansione(ordine.id)}>
 
                   {/* 1a Riga: Cliente - Stato - Tipo */}

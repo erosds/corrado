@@ -7,8 +7,8 @@ import { useState } from 'react';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Home' },
+  { to: '/carichi', icon: Truck, label: 'Planner' },
   { to: '/ordini', icon: ShoppingCart, label: 'Ordini' },
-  { to: '/carichi', icon: Truck, label: 'Carichi' },
   { to: '/clienti', icon: Users, label: 'Clienti' },
   { to: '/mulini', icon: Factory, label: 'Mulini' },
   { to: '/trasportatori', icon: Truck, label: 'Trasportatori' },
