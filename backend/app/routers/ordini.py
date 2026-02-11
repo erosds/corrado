@@ -279,27 +279,41 @@ def aggiorna_ordine(
     ordine: OrdineUpdate,
     db: Session = Depends(get_db)
 ):
-    """Aggiorna ordine (senza modificare le righe)"""
     db_ordine = db.query(Ordine).filter(Ordine.id == ordine_id).first()
     if not db_ordine:
         raise HTTPException(status_code=404, detail="Ordine non trovato")
-    
-    update_data = ordine.model_dump(exclude_unset=True)
-    
-    # Se cambia data_ritiro e cliente è RIBA, ricalcola data_incasso
-    if "data_ritiro" in update_data:
-        cliente = db.query(Cliente).filter(Cliente.id == db_ordine.cliente_id).first()
-        if cliente and cliente.riba and update_data["data_ritiro"]:
-            if "data_incasso_mulino" not in update_data:
-                update_data["data_incasso_mulino"] = calcola_data_incasso_riba(update_data["data_ritiro"])
-    
+
+    update_data = ordine.model_dump(exclude={"righe"}, exclude_unset=True)
+
+    # Update campi ordine
     for field, value in update_data.items():
         setattr(db_ordine, field, value)
-    
+
+    # ===== GESTIONE RIGHE =====
+    if ordine.righe is not None:
+
+        # Cancella righe esistenti
+        db.query(RigaOrdine).filter(RigaOrdine.ordine_id == ordine_id).delete()
+
+        # Ricrea righe
+        for riga_data in ordine.righe:
+            db_riga = RigaOrdine(
+                ordine_id=ordine_id,
+                **riga_data.model_dump()
+            )
+            db.add(db_riga)
+
+            # Salva storico prezzo
+            salva_storico_prezzo(
+                db,
+                cliente_id=db_ordine.cliente_id,
+                prodotto_id=riga_data.prodotto_id,
+                prezzo=riga_data.prezzo_quintale
+            )
+
     db.commit()
     db.refresh(db_ordine)
     return db_ordine
-
 
 # ==========================================
 # ENDPOINT ELIMINAZIONE

@@ -67,7 +67,6 @@ class OrdineBase(BaseModel):
 class OrdineCreate(OrdineBase):
     righe: List[RigaOrdineCreate]
 
-
 class OrdineUpdate(BaseModel):
     cliente_id: Optional[int] = None
     data_ordine: Optional[date] = None
@@ -75,10 +74,9 @@ class OrdineUpdate(BaseModel):
     data_incasso_mulino: Optional[date] = None
     tipo_ordine: Optional[str] = None
     trasportatore_id: Optional[int] = None
-    carico_id: Optional[int] = None
-    stato: Optional[str] = None
     note: Optional[str] = None
 
+    righe: Optional[List[RigaOrdineCreate]] = None
 
 class OrdineRead(OrdineBase):
     id: int
