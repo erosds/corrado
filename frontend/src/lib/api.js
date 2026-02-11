@@ -70,6 +70,17 @@ export const carichiApi = {
     api.post(`/carichi/${caricoId}/rimuovi-ordine/${ordineId}`), 
 };
 
+// --- COMPOSIZIONE CARICHI ---
+export const composizioneApi = {
+  // Ottiene ordini disponibili raggruppati per mulino con suggerimenti
+  ordiniDisponibili: (params = {}) =>
+    api.get('/composizione-carichi/ordini-disponibili', { params }),
+  
+  // Lista mulini che hanno ordini da assegnare (per filtro)
+  muliniConOrdini: () =>
+    api.get('/composizione-carichi/mulini-con-ordini'),
+};
+
 // --- PAGAMENTI ---
 export const pagamentiApi = {
   provvigioniTrimestre: (anno, trimestre) =>

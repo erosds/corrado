@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import clienti, mulini, prodotti, trasportatori, ordini, carichi, pagamenti
+from app.routers import clienti, mulini, prodotti, trasportatori, ordini, carichi, pagamenti, composizione_carichi
 
 app = FastAPI(
     title="Gestionale Farina - Corrado",
