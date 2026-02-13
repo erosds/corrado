@@ -27,3 +27,5 @@ __pycache__
 
 venv
 .claude
+.env
+backend/.env
