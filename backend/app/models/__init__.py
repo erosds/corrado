@@ -5,6 +5,7 @@ from app.models.trasportatore import Trasportatore
 from app.models.ordine import Ordine, RigaOrdine
 from app.models.storico_prezzo import StoricoPrezzo
 from app.models.carico import Carico
+from app.models.utente import Utente
 
 __all__ = [
     "Cliente",
@@ -15,4 +16,5 @@ __all__ = [
     "RigaOrdine",
     "StoricoPrezzo",
     "Carico",
+    "Utente",
 ]

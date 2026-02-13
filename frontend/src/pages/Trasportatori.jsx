@@ -39,7 +39,7 @@ export default function Trasportatori() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto">
       <DateHeader />
 
       {/* Header */}

@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Plus, Search, Package, Trash2, Search as ViewIcon, ChevronUp, ChevronDown, X, Factory
+  Plus, Search, Package, Trash2, Search as ViewIcon, ChevronUp, ChevronDown, X, Factory, Pencil
 } from 'lucide-react';
-import { ordiniApi, trasportatoriApi, muliniApi } from '@/lib/api';
+import { ordiniApi, muliniApi } from '@/lib/api';
 import DateHeader from '@/components/DateHeader';
 
 export default function Ordini() {
   const navigate = useNavigate();
   const [ordini, setOrdini] = useState([]);
-  const [trasportatori, setTrasportatori] = useState([]);
   const [mulini, setMulini] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtroStato, setFiltroStato] = useState('');
@@ -18,6 +17,9 @@ export default function Ordini() {
   const [eliminando, setEliminando] = useState(null);
   const [ordiniEspansi, setOrdiniEspansi] = useState([]); // Array invece di singolo valore
   const [filtroMulini, setFiltroMulini] = useState([]); // Array di mulino_id selezionati, vuoto = tutti
+  const [filtroDataDa, setFiltroDataDa] = useState('');
+  const [filtroDataA, setFiltroDataA] = useState('');
+  const [filtroIncasso, setFiltroIncasso] = useState(''); // '' | 'con' | 'senza'
 
   useEffect(() => {
     caricaDati();
@@ -37,14 +39,11 @@ export default function Ordini() {
     try {
       setLoading(true);
 
-      const [ordiniRes, traspRes, muliniRes] = await Promise.all([
+      const [ordiniRes, muliniRes] = await Promise.all([
         ordiniApi.lista(),
-        trasportatoriApi.lista(),
         muliniApi.lista()
       ]);
-      console.log("Esempio riga ordine:", ordiniRes.data[0]?.righe?.[0]); // Controlla i nomi dei campi qui
       setOrdini(ordiniRes.data);
-      setTrasportatori(traspRes.data);
       setMulini(muliniRes.data);
     } catch (error) {
       console.error('Errore caricamento:', error);
@@ -86,53 +85,6 @@ export default function Ordini() {
     );
   };
 
-  const handleDataRitiroChange = async (ordineId, nuovaData, e) => {
-    e.stopPropagation();
-
-    // Se la data viene cancellata (stringa vuota), procediamo direttamente
-    if (nuovaData) {
-      const ordine = ordini.find(o => o.id === ordineId);
-      const dataOrdine = new Date(ordine.data_ordine);
-      dataOrdine.setHours(0, 0, 0, 0);
-
-      const dataRitiroScelta = new Date(nuovaData);
-      dataRitiroScelta.setHours(0, 0, 0, 0);
-
-      if (dataRitiroScelta < dataOrdine) {
-        alert(`La data di ritiro non può essere precedente alla data dell'ordine (${formatDate(ordine.data_ordine)})`);
-        return;
-      }
-    }
-
-    try {
-      // Se nuovaData è vuota, inviamo null al database
-      const valoreDaSalvare = nuovaData || null;
-      await ordiniApi.aggiorna(ordineId, { data_ritiro: valoreDaSalvare });
-
-      setOrdini(ordini.map(o =>
-        o.id === ordineId ? { ...o, data_ritiro: valoreDaSalvare } : o
-      ));
-    } catch (error) {
-      console.error('Errore aggiornamento data ritiro:', error);
-      alert('Errore durante il salvataggio della data');
-    }
-  };
-
-  // Aggiorna trasportatore inline
-  const handleTrasportatoreChange = async (ordineId, trasportatoreId, e) => {
-    e.stopPropagation();
-    try {
-      const id = trasportatoreId ? parseInt(trasportatoreId) : null;
-      await ordiniApi.aggiorna(ordineId, { trasportatore_id: id });
-      const trasp = trasportatori.find(t => t.id === id);
-      setOrdini(ordini.map(o =>
-        o.id === ordineId ? { ...o, trasportatore_id: id, trasportatore_nome: trasp?.nome || null } : o
-      ));
-    } catch (error) {
-      console.error('Errore aggiornamento trasportatore:', error);
-    }
-  };
-
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
@@ -156,7 +108,7 @@ export default function Ordini() {
         return { campo, direzione: prev.direzione === 'asc' ? 'desc' : 'asc' };
       }
       // Default desc per date e numeri, asc per testo
-      const defaultDesc = ['data_ordine', 'data_ritiro', 'totale_quintali', 'totale_importo', 'id'].includes(campo);
+      const defaultDesc = ['data_ordine', 'data_ritiro', 'data_incasso_mulino', 'totale_quintali', 'totale_importo', 'id'].includes(campo);
       return { campo, direzione: defaultDesc ? 'desc' : 'asc' };
     });
   };
@@ -183,6 +135,16 @@ export default function Ordini() {
         const muliniOrdine = o.righe?.map(r => r.mulino_id) || [];
         if (!filtroMulini.some(id => muliniOrdine.includes(id))) return false;
       }
+      if (filtroDataDa) {
+        const dataOrdine = o.data_ordine?.split('T')[0];
+        if (!dataOrdine || dataOrdine < filtroDataDa) return false;
+      }
+      if (filtroDataA) {
+        const dataOrdine = o.data_ordine?.split('T')[0];
+        if (!dataOrdine || dataOrdine > filtroDataA) return false;
+      }
+      if (filtroIncasso === 'con' && !o.data_incasso_mulino) return false;
+      if (filtroIncasso === 'senza' && o.data_incasso_mulino) return false;
       if (!filtroTesto) return true;
       const testo = filtroTesto.toLowerCase();
       return (
@@ -205,7 +167,7 @@ export default function Ordini() {
       }
 
       // Campi data
-      if (['data_ordine', 'data_ritiro'].includes(campo)) {
+      if (['data_ordine', 'data_ritiro', 'data_incasso_mulino'].includes(campo)) {
         return (new Date(valA) - new Date(valB)) * dir;
       }
 
@@ -233,7 +195,7 @@ export default function Ordini() {
           className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl font-medium hover:bg-black transition-colors"
         >
           <Plus size={18} />
-          <span className="hidden sm:inline">Nuovo</span>
+          <span className="hidden sm:inline">Nuovo ordine</span>
         </Link>
       </div>
 
@@ -242,7 +204,7 @@ export default function Ordini() {
         <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
           <button
             onClick={() => setFiltroMulini([])}
-            className={`flex-shrink-0 px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 ${filtroMulini.length === 0
+            className={`flex-shrink-0 px-3 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 ${filtroMulini.length === 0
               ? 'bg-slate-900 text-white'
               : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
               }`}
@@ -250,7 +212,6 @@ export default function Ordini() {
             <Factory size={16} />
             Tutti i mulini
           </button>
-          <div className="w-px h-8 bg-slate-300 flex-shrink-0" />
           {mulini.map(mulino => (
             <button
               key={mulino.id}
@@ -266,7 +227,23 @@ export default function Ordini() {
         </div>
       )}
 
-      <div className="flex gap-3 mb-4">
+      <div className="flex gap-3 mb-4 flex-wrap">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <label className="text-xs font-bold text-slate-500 uppercase">Da</label>
+          <input
+            type="date"
+            value={filtroDataDa}
+            onChange={(e) => setFiltroDataDa(e.target.value)}
+            className="px-3 py-3 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
+          />
+          <label className="text-xs font-bold text-slate-500 uppercase">A</label>
+          <input
+            type="date"
+            value={filtroDataA}
+            onChange={(e) => setFiltroDataA(e.target.value)}
+            className="px-3 py-3 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
+          />
+        </div>
         <div className="flex-1 relative">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
@@ -293,6 +270,15 @@ export default function Ordini() {
           <option value="">Tutti gli stati ({ordini.length})</option>
           <option value="inserito">In attesa ({ordiniInseriti})</option>
           <option value="ritirato">Ritirati ({ordiniRitirati})</option>
+        </select>
+        <select
+          value={filtroIncasso}
+          onChange={(e) => setFiltroIncasso(e.target.value)}
+          className="px-4 py-3 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 font-medium text-slate-700"
+        >
+          <option value="">Tutti (data incasso)</option>
+          <option value="con">Con data incasso</option>
+          <option value="senza">Senza data incasso</option>
         </select>
       </div>
 
@@ -341,7 +327,13 @@ export default function Ordini() {
                       className="text-left px-4 py-3 text-sm font-semibold text-slate-600 cursor-pointer hover:bg-slate-100"
                       onClick={() => handleOrdinamento('data_ordine')}
                     >
-                      Data Ordine <IconaOrdinamento campo="data_ordine" />
+                      Inserimento <IconaOrdinamento campo="data_ordine" />
+                    </th>
+                    <th
+                      className="text-left px-4 py-3 text-sm font-semibold text-slate-600 cursor-pointer hover:bg-slate-100"
+                      onClick={() => handleOrdinamento('data_incasso_mulino')}
+                    >
+                      Incasso Mulino <IconaOrdinamento campo="data_incasso_mulino" />
                     </th>
                     <th
                       className="text-left px-4 py-3 text-sm font-semibold text-slate-600 cursor-pointer hover:bg-slate-100"
@@ -395,6 +387,9 @@ export default function Ordini() {
                         <td className="px-4 py-3 text-sm text-slate-600">
                           {formatDate(ordine.data_ordine)}
                         </td>
+                        <td className="px-4 py-3 text-sm text-slate-600">
+                          {formatDate(ordine.data_incasso_mulino)}
+                        </td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-lg ${ordine.tipo_ordine === 'pedane'
                             ? 'bg-blue-100 text-blue-700'
@@ -417,30 +412,11 @@ export default function Ordini() {
                             {calcolaStato(ordine.data_ritiro) === 'ritirato' ? '✓' : '○'}
                           </span>
                         </td>
-                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                          <div className="relative">
-                            <input
-                              type="date"
-                              value={ordine.data_ritiro || ''}
-                              onChange={(e) => handleDataRitiroChange(ordine.id, e.target.value, e)}
-                              className={`px-2 py-1.5 text-sm border border-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white ${!ordine.data_ritiro ? 'text-transparent' : ''}`}
-                            />
-                            {!ordine.data_ritiro && (
-                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">-</span>
-                            )}
-                          </div>
+                        <td className="px-4 py-3 text-sm text-slate-600">
+                          {formatDate(ordine.data_ritiro)}
                         </td>
-                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                          <select
-                            value={ordine.trasportatore_id || ''}
-                            onChange={(e) => handleTrasportatoreChange(ordine.id, e.target.value, e)}
-                            className="px-2 py-1.5 text-sm border border-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white w-32"
-                          >
-                            <option value="">-</option>
-                            {trasportatori.map(t => (
-                              <option key={t.id} value={t.id}>{t.nome}</option>
-                            ))}
-                          </select>
+                        <td className="px-4 py-3 text-sm text-slate-600">
+                          {ordine.trasportatore_nome || '-'}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-center gap-1">
@@ -450,6 +426,13 @@ export default function Ordini() {
                               title="Vedi Dettaglio"
                             >
                               <ViewIcon size={18} />
+                            </button>
+                            <button
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/ordini/${ordine.id}/modifica`); }}
+                              className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                              title="Modifica"
+                            >
+                              <Pencil size={18} />
                             </button>
                             <button
                               onClick={(e) => handleElimina(ordine.id, e)}
@@ -465,19 +448,22 @@ export default function Ordini() {
 
                       {ordiniEspansi.includes(ordine.id) && ordine.righe && ordine.righe.length > 0 && (
                         <tr className="bg-slate-50">
-                          <td colSpan={10} className="px-4 py-3">
+                          <td colSpan={11} className="px-4 py-3">
                             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                               <table className="w-full">
                                 <thead className="bg-slate-100">
                                   <tr>
                                     <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">
-                                      Quintali
+                                      Pedane
                                     </th>
                                     <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">
                                       Prodotto
                                     </th>
                                     <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">
                                       Tipologia
+                                    </th>
+                                    <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">
+                                      Quintali
                                     </th>
                                     <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">
                                       Mulino
@@ -494,7 +480,7 @@ export default function Ordini() {
                                   {ordine.righe.map((riga) => (
                                     <tr key={riga.id} className="text-sm">
                                       <td className="px-4 py-2.5 text-right font-medium text-slate-900">
-                                        {parseFloat(riga.quintali || 0).toFixed(1)}
+                                        {ordine.tipo_ordine === 'sfuso' ? '-' : parseInt(riga.pedane || 0)}
                                       </td>
                                       <td className="px-4 py-2.5 font-medium text-slate-900">
                                         {riga.prodotto_nome || '-'}
@@ -510,6 +496,9 @@ export default function Ordini() {
                                             {riga.prodotto_tipologia}
                                           </span>
                                         ) : '-'}
+                                      </td>
+                                      <td className="px-4 py-2.5 text-right font-medium text-slate-900">
+                                        {parseFloat(riga.quintali || 0).toFixed(1)}
                                       </td>
                                       <td className="px-4 py-2.5">
                                         <div className="flex items-center gap-2">
@@ -569,6 +558,9 @@ export default function Ordini() {
                       <button onClick={(e) => handleDettaglio(ordine.id, e)} className="p-2 text-slate-400">
                         <ViewIcon size={20} />
                       </button>
+                      <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/ordini/${ordine.id}/modifica`); }} className="p-2 text-amber-400">
+                        <Pencil size={20} />
+                      </button>
                       <button onClick={(e) => handleElimina(ordine.id, e)} className="p-2 text-red-400">
                         <Trash2 size={20} />
                       </button>
@@ -599,37 +591,19 @@ export default function Ordini() {
                     </div>
                   </div>
 
-                  {/* 3a Riga: Input Ritiro e Trasportatore */}
-                  <div className="grid grid-cols-2 gap-3" onClick={(e) => e.stopPropagation()}>
-                    <div className="relative">
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 flex justify-between items-center">
-                        Ritiro
-                        {ordine.data_ritiro && (
-                          <button onClick={(e) => handleDataRitiroChange(ordine.id, '', e)} className="text-red-500 lowercase font-medium">
-                            cancella
-                          </button>
-                        )}
-                      </label>
-                      <input
-                        type="date"
-                        value={ordine.data_ritiro || ''}
-                        min={ordine.data_ordine ? ordine.data_ordine.split('T')[0] : ''}
-                        onChange={(e) => handleDataRitiroChange(ordine.id, e.target.value, e)}
-                        className="w-full px-2 py-2 text-sm border border-slate-200 rounded-xl bg-slate-50 font-medium"
-                      />
+                  {/* 3a Riga: Ritiro, Incasso e Trasportatore (read-only) */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Ritiro</span>
+                      <span className="text-sm font-medium text-slate-700">{formatDate(ordine.data_ritiro)}</span>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Trasportatore</label>
-                      <select
-                        value={ordine.trasportatore_id || ''}
-                        onChange={(e) => handleTrasportatoreChange(ordine.id, e.target.value, e)}
-                        className="w-full px-2 py-2 text-sm border border-slate-200 rounded-xl bg-slate-50 font-medium"
-                      >
-                        <option value="">-</option>
-                        {trasportatori.map(t => (
-                          <option key={t.id} value={t.id}>{t.nome}</option>
-                        ))}
-                      </select>
+                      <span className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Incasso</span>
+                      <span className="text-sm font-medium text-slate-700">{formatDate(ordine.data_incasso_mulino)}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Trasportatore</span>
+                      <span className="text-sm font-medium text-slate-700">{ordine.trasportatore_nome || '-'}</span>
                     </div>
                   </div>
                 </div>

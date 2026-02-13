@@ -1012,7 +1012,18 @@ export default function OrdineNuovo() {
                 onClick={() => setShowModalProdotti(false)}
                 className="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200"
               >
-                Chiudi
+                Torna all'ordine
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowModalProdotti(false);
+                  handleSubmit(new Event('submit'));
+                }}
+                disabled={saving || righe.length === 0 || !formData.cliente_id}
+                className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-medium hover:bg-black transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
+              >
+                {saving ? 'Salvataggio...' : (isModifica ? 'Salva Modifiche' : 'Crea Ordine')}
               </button>
             </div>
           </div>

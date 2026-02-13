@@ -73,7 +73,7 @@ export default function Pagamenti() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto">
       <DateHeader />
 
       {/* Header */}
@@ -158,7 +158,7 @@ export default function Pagamenti() {
               </p>
             </div>
             <div>
-              <p className="text-emerald-200 text-xs uppercase tracking-wider">Incasso Mulino</p>
+              <p className="text-emerald-200 text-xs uppercase tracking-wider">{filtroMulino === null ? 'Incassi Mulini' : 'Incasso Mulino'}</p>
               <p className="text-xl md:text-2xl font-bold">
                 {formatCurrency(dati.totale_incassato)}
               </p>
@@ -248,14 +248,15 @@ export default function Pagamenti() {
                       {/* Sotto-tabella righe */}
                       {ordiniEspansi.includes(ordine.id) && ordine.righe.length > 0 && (
                         <tr className="bg-slate-50">
-                          <td colSpan={8} className="px-4 py-3">
+                          <td colSpan={9} className="px-4 py-3">
                             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                               <table className="w-full">
                                 <thead className="bg-slate-100">
                                   <tr>
-                                    <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">Quintali</th>
+                                    <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">Pedane</th>
                                     <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">Prodotto</th>
                                     <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">Tipologia</th>
+                                    <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">Quintali</th>
                                     <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">€/q</th>
                                     <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">Totale</th>
                                     <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">Provv.</th>
@@ -266,7 +267,7 @@ export default function Pagamenti() {
                                   {ordine.righe.map((riga) => (
                                     <tr key={riga.id} className="text-sm">
                                       <td className="px-4 py-2.5 text-right font-medium text-slate-900">
-                                        {parseFloat(riga.quintali || 0).toFixed(1)}
+                                        {ordine.tipo_ordine === 'sfuso' ? '-' : parseInt(riga.pedane || 0)}
                                       </td>
                                       <td className="px-4 py-2.5 font-medium text-slate-900">
                                         {riga.prodotto_nome || '-'}
@@ -283,6 +284,9 @@ export default function Pagamenti() {
                                             {riga.prodotto_tipologia}
                                           </span>
                                         ) : '-'}
+                                      </td>
+                                      <td className="px-4 py-2.5 text-right font-medium text-slate-900">
+                                        {parseFloat(riga.quintali || 0).toFixed(1)}
                                       </td>
                                       <td className="px-4 py-2.5 text-right text-slate-600">
                                         {riga.prezzo_quintale ? `€${parseFloat(riga.prezzo_quintale).toFixed(2)}` : '-'}

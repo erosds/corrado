@@ -38,6 +38,7 @@ class RigaOrdineDettaglio(RigaOrdineRead):
 class RigaOrdineLista(BaseModel):
     """Riga leggera per visualizzazione in lista ordini"""
     id: int
+    pedane: Optional[Decimal] = None
     prodotto_nome: Optional[str] = None
     prodotto_tipologia: Optional[str] = None
     mulino_id: Optional[int] = None

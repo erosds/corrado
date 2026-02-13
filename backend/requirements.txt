@@ -3,8 +3,8 @@ uvicorn
 sqlalchemy
 pydantic
 python-dateutil
-python-jose
-passlib
+python-jose[cryptography]
+bcrypt
 python-multipart
 psycopg2-binary
 python-dotenv

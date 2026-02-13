@@ -42,6 +42,7 @@ class ProvvigioneDettaglio(BaseModel):
 
 class RigaProvvigione(BaseModel):
     id: int
+    pedane: Optional[Decimal] = None
     prodotto_nome: str
     prodotto_tipologia: Optional[str] = None
     quintali: Decimal
@@ -261,6 +262,7 @@ def provvigioni_ordini(
 
             righe_result.append(RigaProvvigione(
                 id=riga.id,
+                pedane=riga.pedane,
                 prodotto_nome=prodotto.nome,
                 prodotto_tipologia=prodotto.tipologia,
                 quintali=riga.quintali,

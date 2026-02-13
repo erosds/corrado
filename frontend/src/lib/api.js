@@ -7,6 +7,27 @@ const api = axios.create({
   },
 });
 
+// Interceptor: aggiunge Authorization header se token presente
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Interceptor: su 401 rimuove token e redirect a /login
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && !error.config.url?.includes('/auth/')) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 // --- CLIENTI ---
 export const clientiApi = {
   lista: (search = '') => api.get('/clienti/', { params: { search } }),

@@ -14,7 +14,7 @@ export default function ClienteDettaglio() {
   const [prezzi, setPrezzi] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showEdit, setShowEdit] = useState(false);
-  const [tab, setTab] = useState('info'); // 'info' | 'prezzi'
+  const [tab, setTab] = useState('prezzi'); // 'prezzi' | 'info'
 
   useEffect(() => {
     caricaDati();
@@ -122,24 +122,24 @@ export default function ClienteDettaglio() {
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
         <button
-          onClick={() => setTab('info')}
-          className={`px-4 py-2 rounded-xl font-medium transition-colors ${
-            tab === 'info' 
-              ? 'bg-slate-900 text-white' 
-              : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
-          }`}
-        >
-          Informazioni
-        </button>
-        <button
           onClick={() => setTab('prezzi')}
           className={`px-4 py-2 rounded-xl font-medium transition-colors ${
-            tab === 'prezzi' 
-              ? 'bg-slate-900 text-white' 
+            tab === 'prezzi'
+              ? 'bg-slate-900 text-white'
               : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
           }`}
         >
           Prezzi ({prezzi.length})
+        </button>
+        <button
+          onClick={() => setTab('info')}
+          className={`px-4 py-2 rounded-xl font-medium transition-colors ${
+            tab === 'info'
+              ? 'bg-slate-900 text-white'
+              : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+          }`}
+        >
+          Informazioni
         </button>
       </div>
 
