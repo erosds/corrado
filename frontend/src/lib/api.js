@@ -69,12 +69,14 @@ export const trasportatoriApi = {
 // --- ORDINI ---
 export const ordiniApi = {
   lista: (params = {}) => api.get('/ordini/', { params }),
-  dettaglio: (id) => api.get(`/ordini/${id}`), 
+  dettaglio: (id) => api.get(`/ordini/${id}`),
   crea: (data) => api.post('/ordini/', data),
   aggiorna: (id, data) => api.put(`/ordini/${id}`, data),
-  elimina: (id) => api.delete(`/ordini/${id}`), 
-  ultimoPrezzo: (clienteId, prodottoId) => 
-    api.get(`/ordini/ultimo-prezzo/${clienteId}/${prodottoId}`), 
+  elimina: (id) => api.delete(`/ordini/${id}`),
+  ultimoPrezzo: (clienteId, prodottoId) =>
+    api.get(`/ordini/ultimo-prezzo/${clienteId}/${prodottoId}`),
+  inviaEmail: (id, data) => api.post(`/ordini/${id}/invia-email`, data),
+  mailConfig: () => api.get('/ordini/mail-config'),
 };
 
 // --- CARICHI ---

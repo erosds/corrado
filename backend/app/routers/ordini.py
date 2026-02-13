@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, desc
 from typing import List, Optional
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
+from pydantic import BaseModel
 
 from app.database import get_db
 from app.models.ordine import Ordine, RigaOrdine
@@ -15,8 +16,20 @@ from app.models.storico_prezzo import StoricoPrezzo
 from app.schemas.ordine import (
     OrdineCreate, OrdineUpdate, OrdineRead, OrdineList, OrdineDettaglio
 )
+from app.services.email import send_email, MAIL_FROM
 
 router = APIRouter()
+
+
+class EmailEntry(BaseModel):
+    mulino_id: int
+    to: str
+    subject: str
+    body: str
+
+
+class InviaEmailRequest(BaseModel):
+    emails: List[EmailEntry]
 
 
 def calcola_data_incasso_riba(data_consegna: date) -> date:
@@ -72,6 +85,31 @@ def get_ultimo_prezzo(cliente_id: int, prodotto_id: int, db: Session = Depends(g
         "prezzo": float(ultimo.prezzo),
         "data": ultimo.creato_il
     }
+
+
+@router.get("/mail-config")
+def get_mail_config():
+    """Ritorna la configurazione email (mittente)"""
+    return {"mail_from": MAIL_FROM}
+
+
+@router.post("/{ordine_id}/invia-email")
+def invia_email_ordine(ordine_id: int, request: InviaEmailRequest, db: Session = Depends(get_db)):
+    """Invia email dell'ordine ai mulini"""
+    ordine = db.query(Ordine).filter(Ordine.id == ordine_id).first()
+    if not ordine:
+        raise HTTPException(status_code=404, detail="Ordine non trovato")
+
+    if ordine.email_inviata_il is not None:
+        raise HTTPException(status_code=400, detail="Email già inviata per questo ordine")
+
+    for entry in request.emails:
+        send_email(to=entry.to, subject=entry.subject, body=entry.body)
+
+    ordine.email_inviata_il = datetime.now(timezone.utc)
+    db.commit()
+
+    return {"message": "Email inviate con successo", "email_inviata_il": ordine.email_inviata_il}
 
 
 # ==========================================
@@ -195,9 +233,10 @@ def get_ordine(ordine_id: int, db: Session = Depends(get_db)):
             "prodotto_nome": prodotto.nome if prodotto else None,
             "prodotto_tipologia": prodotto.tipologia if prodotto else None,
             "mulino_nome": mulino.nome if mulino else None,
-            "mulino_indirizzo": mulino.indirizzo_ritiro if mulino else None
+            "mulino_indirizzo": mulino.indirizzo_ritiro if mulino else None,
+            "mulino_email": mulino.email1 if mulino else None
         })
-    
+
     return {
         "id": ordine.id,
         "cliente_id": ordine.cliente_id,
@@ -213,6 +252,8 @@ def get_ordine(ordine_id: int, db: Session = Depends(get_db)):
         "stato": ordine.stato,
         "note": ordine.note,
         "creato_il": ordine.creato_il,
+        "email_inviata_il": ordine.email_inviata_il,
+        "mail_from": MAIL_FROM,
         "righe": righe_dettaglio
     }
 

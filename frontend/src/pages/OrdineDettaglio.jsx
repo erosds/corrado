@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft, Edit, Trash2, CheckCircle,
-  Calendar, Factory, Package, User, Truck
+  Calendar, Factory, Package, User, Truck, Mail, X, Send
 } from 'lucide-react';
 import { ordiniApi } from '@/lib/api';
 
@@ -11,6 +11,9 @@ export default function OrdineDettaglio() {
   const navigate = useNavigate();
   const [ordine, setOrdine] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showMailDialog, setShowMailDialog] = useState(false);
+  const [mailData, setMailData] = useState({});
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => {
     caricaOrdine();
@@ -47,6 +50,80 @@ export default function OrdineDettaglio() {
     } catch (error) {
       console.error('Errore eliminazione:', error);
       alert('Impossibile eliminare l\'ordine');
+    }
+  };
+
+  const openMailDialog = () => {
+    // Raggruppa righe per mulino
+    const gruppi = {};
+    for (const riga of ordine.righe) {
+      const mid = riga.mulino_id;
+      if (!gruppi[mid]) {
+        gruppi[mid] = {
+          mulino_id: mid,
+          mulino_nome: riga.mulino_nome,
+          mulino_email: riga.mulino_email || '',
+          righe: []
+        };
+      }
+      gruppi[mid].righe.push(riga);
+    }
+
+    // Pre-compila subject e body per ogni mulino
+    const initial = {};
+    for (const [mid, gruppo] of Object.entries(gruppi)) {
+      const righeText = gruppo.righe.map(r => {
+        const tipologia = r.prodotto_tipologia ? ` (${r.prodotto_tipologia})` : '';
+        const pedane = r.pedane ? `, ${parseFloat(r.pedane)} ped` : '';
+        return `- ${r.prodotto_nome}${tipologia} — ${parseFloat(r.quintali)} q${pedane} — €${parseFloat(r.prezzo_quintale)}/q`;
+      }).join('\n');
+
+      const totQ = gruppo.righe.reduce((s, r) => s + parseFloat(r.quintali || 0), 0);
+
+      const body = `Buongiorno,
+
+vi inviamo il seguente ordine:
+
+Cliente: ${ordine.cliente_nome}
+Indirizzo consegna: ${ordine.cliente_indirizzo || '-'}
+Data ordine: ${formatDate(ordine.data_ordine)}
+Data ritiro: ${ordine.data_ritiro ? formatDate(ordine.data_ritiro) : 'Da definire'}
+
+Prodotti:
+${righeText}
+
+Totale: ${totQ.toFixed(1)} q
+
+Cordiali saluti`;
+
+      initial[mid] = {
+        ...gruppo,
+        subject: `Ordine #${ordine.id} - ${ordine.cliente_nome}`,
+        body
+      };
+    }
+
+    setMailData(initial);
+    setShowMailDialog(true);
+  };
+
+  const handleSendEmail = async () => {
+    setSendingEmail(true);
+    try {
+      const emails = Object.values(mailData).map(g => ({
+        mulino_id: g.mulino_id,
+        to: g.mulino_email,
+        subject: g.subject,
+        body: g.body
+      }));
+      await ordiniApi.inviaEmail(id, { emails });
+      setShowMailDialog(false);
+      await caricaOrdine();
+    } catch (error) {
+      console.error('Errore invio email:', error);
+      alert('Errore durante l\'invio delle email: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -118,6 +195,18 @@ export default function OrdineDettaglio() {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={openMailDialog}
+            disabled={!!ordine.email_inviata_il}
+            className={`p-2.5 border rounded-xl transition-colors ${
+              ordine.email_inviata_il
+                ? 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed'
+                : 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50'
+            }`}
+            title={ordine.email_inviata_il ? `Inviata il ${formatDate(ordine.email_inviata_il)}` : 'Invia Mail al mulino'}
+          >
+            <Mail size={18} />
+          </button>
           <Link
             to={`/ordini/${ordine.id}/modifica`}
             className="p-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors"
@@ -256,6 +345,96 @@ export default function OrdineDettaglio() {
             Note
           </h3>
           <p className="text-slate-700 whitespace-pre-wrap">{ordine.note}</p>
+        </div>
+      )}
+
+      {/* Mail Dialog */}
+      {showMailDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100">
+              <h2 className="text-lg font-bold">Invia Ordine ai Mulini</h2>
+              <button onClick={() => setShowMailDialog(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-6">
+              {Object.values(mailData).map((gruppo) => (
+                <div key={gruppo.mulino_id} className="border border-slate-200 rounded-xl p-4">
+                  <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
+                    <Factory size={16} className="text-slate-500" />
+                    {gruppo.mulino_nome}
+                  </h3>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-500 mb-1">Da</label>
+                      <input
+                        type="text"
+                        value={ordine.mail_from || ''}
+                        readOnly
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-500 mb-1">A</label>
+                      <input
+                        type="text"
+                        value={gruppo.mulino_email || 'Email non configurata'}
+                        readOnly
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-500 mb-1">Oggetto</label>
+                      <input
+                        type="text"
+                        value={gruppo.subject}
+                        onChange={(e) => setMailData(prev => ({
+                          ...prev,
+                          [gruppo.mulino_id]: { ...prev[gruppo.mulino_id], subject: e.target.value }
+                        }))}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-500 mb-1">Corpo</label>
+                      <textarea
+                        value={gruppo.body}
+                        onChange={(e) => setMailData(prev => ({
+                          ...prev,
+                          [gruppo.mulino_id]: { ...prev[gruppo.mulino_id], body: e.target.value }
+                        }))}
+                        rows={12}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-mono resize-y"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 p-5 border-t border-slate-100">
+              <button
+                onClick={() => setShowMailDialog(false)}
+                className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleSendEmail}
+                disabled={sendingEmail}
+                className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                <Send size={16} />
+                {sendingEmail ? 'Invio in corso...' : 'Invia'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

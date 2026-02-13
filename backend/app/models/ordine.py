@@ -82,6 +82,9 @@ class Ordine(Base):
         comment="Stato logistico: aperto, in_cluster, in_carico, spedito"
     )
     
+    # Email
+    email_inviata_il = Column(DateTime(timezone=True), nullable=True)
+
     # Note e timestamp
     note = Column(Text, nullable=True)
     creato_il = Column(DateTime(timezone=True), server_default=func.now())

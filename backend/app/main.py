@@ -35,10 +35,25 @@ def seed_admin_user():
         db.close()
 
 
+def run_migrations():
+    """Aggiunge colonne mancanti alle tabelle esistenti (no Alembic)."""
+    from sqlalchemy import inspect, text
+    inspector = inspect(engine)
+    # Ordini: email_inviata_il
+    if "ordini" in inspector.get_table_names():
+        columns = [c["name"] for c in inspector.get_columns("ordini")]
+        if "email_inviata_il" not in columns:
+            with engine.begin() as conn:
+                conn.execute(text(
+                    "ALTER TABLE ordini ADD COLUMN email_inviata_il TIMESTAMPTZ"
+                ))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: crea tabelle e seed admin
     Base.metadata.create_all(bind=engine)
+    run_migrations()
     seed_admin_user()
     yield
 

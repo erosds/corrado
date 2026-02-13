@@ -32,6 +32,7 @@ class RigaOrdineDettaglio(RigaOrdineRead):
     prodotto_tipologia: Optional[str] = None  # Tipo farina (0, 00, altro)
     mulino_nome: Optional[str] = None
     mulino_indirizzo: Optional[str] = None  # Indirizzo ritiro mulino
+    mulino_email: Optional[str] = None
 
 
 # --- Schema leggero per righe nella lista ordini ---
@@ -114,6 +115,8 @@ class OrdineDettaglio(OrdineRead):
     cliente_nome: Optional[str] = None
     cliente_indirizzo: Optional[str] = None  # Indirizzo consegna cliente
     trasportatore_nome: Optional[str] = None
+    email_inviata_il: Optional[datetime] = None
+    mail_from: Optional[str] = None
     righe: List[RigaOrdineDettaglio] = []
 
     class Config:
