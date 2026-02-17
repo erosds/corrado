@@ -127,37 +127,8 @@ export default function Home() {
         </h1>
       </div>
 
-      {/* Menu Grid - 4 colonne desktop, 2 mobile */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {menuItems.map((item, i) => (
-          <motion.div
-            key={item.to + item.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-          >
-            <Link
-              to={item.to}
-              className="block bg-white rounded-2xl p-4 md:p-5 border border-slate-100 hover:border-slate-300 hover:shadow-lg transition-all group h-full"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className={`p-2.5 md:p-3 rounded-xl ${item.color} group-hover:scale-110 transition-transform`}>
-                  <item.icon size={20} strokeWidth={1.5} />
-                </div>
-                <ArrowUpRight 
-                  size={16} 
-                  className="text-slate-300 group-hover:text-slate-500 transition-colors" 
-                />
-              </div>
-              <h2 className="text-base md:text-lg font-bold mb-0.5">{item.title}</h2>
-              <p className="text-slate-500 text-xs md:text-sm">{item.desc}</p>
-            </Link>
-          </motion.div>
-        ))}
-      </div>
-
       {/* Widget Ricerca Cliente */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-5 mb-8">
+      <div className="bg-white rounded-2xl border border-slate-100 p-5 mb-5">
         <h2 className="font-bold text-base mb-3 flex items-center gap-2">
           <Users size={18} className="text-violet-500" />
           Cerca Cliente
@@ -202,6 +173,35 @@ export default function Home() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Menu Grid - 4 colonne desktop, 2 mobile */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+        {menuItems.map((item, i) => (
+          <motion.div
+            key={item.to + item.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+          >
+            <Link
+              to={item.to}
+              className="block bg-white rounded-2xl p-4 md:p-5 border border-slate-100 hover:border-slate-300 hover:shadow-lg transition-all group h-full"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className={`p-2.5 md:p-3 rounded-xl ${item.color} group-hover:scale-110 transition-transform`}>
+                  <item.icon size={20} strokeWidth={1.5} />
+                </div>
+                <ArrowUpRight 
+                  size={16} 
+                  className="text-slate-300 group-hover:text-slate-500 transition-colors" 
+                />
+              </div>
+              <h2 className="text-base md:text-lg font-bold mb-0.5">{item.title}</h2>
+              <p className="text-slate-500 text-xs md:text-sm">{item.desc}</p>
+            </Link>
+          </motion.div>
+        ))}
       </div>
 
       {/* Footer */}
