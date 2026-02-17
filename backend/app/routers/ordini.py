@@ -32,6 +32,10 @@ class InviaEmailRequest(BaseModel):
     emails: List[EmailEntry]
 
 
+class IncassoUpdate(BaseModel):
+    data_incasso_mulino: Optional[date] = None
+
+
 def calcola_data_incasso_riba(data_consegna: date) -> date:
     """
     Calcola data incasso per clienti RIBA: +60 giorni fine mese dalla consegna.
@@ -91,6 +95,17 @@ def get_ultimo_prezzo(cliente_id: int, prodotto_id: int, db: Session = Depends(g
 def get_mail_config():
     """Ritorna la configurazione email (mittente)"""
     return {"mail_from": MAIL_FROM}
+
+
+@router.patch("/{ordine_id}/incasso")
+def aggiorna_incasso(ordine_id: int, body: IncassoUpdate, db: Session = Depends(get_db)):
+    """Aggiorna solo la data incasso mulino di un ordine"""
+    db_ordine = db.query(Ordine).filter(Ordine.id == ordine_id).first()
+    if not db_ordine:
+        raise HTTPException(status_code=404, detail="Ordine non trovato")
+    db_ordine.data_incasso_mulino = body.data_incasso_mulino
+    db.commit()
+    return {"data_incasso_mulino": db_ordine.data_incasso_mulino}
 
 
 @router.post("/{ordine_id}/invia-email")

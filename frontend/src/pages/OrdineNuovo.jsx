@@ -247,13 +247,27 @@ export default function OrdineNuovo() {
     }
   };
 
+  // Mulino dell'ordine corrente (se righe già presenti, è fissato)
+  const mulinoOrdine = righe.length > 0 ? { id: righe[0].mulino_id, nome: righe[0].mulino_nome } : null;
+
   // === MODAL PRODOTTI ===
   const apriModalProdotti = () => {
     setShowModalProdotti(true);
-    setMulinoModalSelezionato('');
-    setMulinoSelezionatoObj(null);
-    setMulinoSearch('');
-    setProdottiModal([]);
+    // Se c'è già un mulino nell'ordine, pre-selezionalo
+    if (mulinoOrdine) {
+      const mulino = mulini.find(m => m.id === mulinoOrdine.id);
+      if (mulino) {
+        setMulinoSelezionatoObj(mulino);
+        setMulinoSearch(mulino.nome);
+        setMulinoModalSelezionato(mulino.id.toString());
+        setProdottiModal(prodottiPerMulino[mulino.id] || []);
+      }
+    } else {
+      setMulinoModalSelezionato('');
+      setMulinoSelezionatoObj(null);
+      setMulinoSearch('');
+      setProdottiModal([]);
+    }
     setFiltroProdotti('');
     setProdottoSelezionato(null);
     setQuantitaModal({ pedane: '', quintali: '', prezzo: '' });
@@ -523,6 +537,7 @@ export default function OrdineNuovo() {
                     type="date"
                     value={formData.data_ordine}
                     onChange={(e) => handleDataChange('data_ordine', e.target.value)}
+                    onClick={(e) => e.target.showPicker?.()}
                     className={inputClass}
                     required
                   />
@@ -536,13 +551,9 @@ export default function OrdineNuovo() {
                       type="date"
                       value={formData.data_ritiro}
                       onChange={(e) => handleDataChange('data_ritiro', e.target.value)}
-                      className={`${inputClass} ${erroriDate.data_ritiro ? 'border-red-500 focus:ring-red-500' : ''} ${!formData.data_ritiro ? 'text-transparent' : ''}`}
+                      onClick={(e) => e.target.showPicker?.()}
+                      className={`${inputClass} ${erroriDate.data_ritiro ? 'border-red-500 focus:ring-red-500' : ''}`}
                     />
-                    {!formData.data_ritiro && (
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                        Nessuna
-                      </span>
-                    )}
                     {formData.data_ritiro && (
                       <button
                         type="button"
@@ -577,13 +588,9 @@ export default function OrdineNuovo() {
                     type="date"
                     value={formData.data_incasso_mulino}
                     onChange={(e) => setFormData(prev => ({ ...prev, data_incasso_mulino: e.target.value }))}
-                    className={`${inputClass} ${!formData.data_incasso_mulino ? 'text-transparent' : ''}`}
+                    onClick={(e) => e.target.showPicker?.()}
+                    className={inputClass}
                   />
-                  {!formData.data_incasso_mulino && (
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                      Nessuna
-                    </span>
-                  )}
                   {formData.data_incasso_mulino && (
                     <button
                       type="button"
@@ -814,17 +821,23 @@ export default function OrdineNuovo() {
               <div className="mb-4">
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Mulino
+                  {mulinoOrdine && (
+                    <span className="ml-2 text-xs font-normal text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                      Fissato: {mulinoOrdine.nome}
+                    </span>
+                  )}
                 </label>
                 <div className="relative">
                   <input
                     ref={mulinoInputRef}
                     type="text"
                     value={mulinoSearch}
-                    onChange={handleMulinoInputChange}
-                    onFocus={() => setShowMulinoDropdown(true)}
+                    onChange={mulinoOrdine ? undefined : handleMulinoInputChange}
+                    onFocus={() => !mulinoOrdine && setShowMulinoDropdown(true)}
                     onBlur={() => setTimeout(() => setShowMulinoDropdown(false), 200)}
                     placeholder="Digita per cercare..."
-                    className={inputClass}
+                    readOnly={!!mulinoOrdine}
+                    className={`${inputClass} ${mulinoOrdine ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`}
                   />
                   {mulinoSearch && (
                     <button

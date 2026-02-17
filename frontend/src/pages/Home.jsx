@@ -1,19 +1,25 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  Users, ShoppingCart, Factory, Truck, Receipt, 
-  Package, ArrowUpRight, Plus, Calculator
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  Users, ShoppingCart, Factory, Truck, Receipt,
+  Package, ArrowUpRight, Plus, Calculator, Search, X
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { carichiApi } from '@/lib/api';
+import { carichiApi, clientiApi } from '@/lib/api';
 import DateHeader from '@/components/DateHeader';
 
 
 export default function Home() {
+  const navigate = useNavigate();
   const [carichiAperti, setCarichiAperti] = useState([]);
+  const [clientiTutti, setClientiTutti] = useState([]);
+  const [cercaCliente, setCercaCliente] = useState('');
+  const [showClientiDropdown, setShowClientiDropdown] = useState(false);
+  const cercaRef = useRef(null);
 
   useEffect(() => {
     caricaCarichiAperti();
+    caricaClienti();
   }, []);
 
   const caricaCarichiAperti = async () => {
@@ -24,6 +30,19 @@ export default function Home() {
       console.error('Errore caricamento carichi:', error);
     }
   };
+
+  const caricaClienti = async () => {
+    try {
+      const { data } = await clientiApi.lista();
+      setClientiTutti(data);
+    } catch (error) {
+      console.error('Errore caricamento clienti:', error);
+    }
+  };
+
+  const clientiFiltrati = cercaCliente
+    ? clientiTutti.filter(c => c.nome.toLowerCase().includes(cercaCliente.toLowerCase())).slice(0, 5)
+    : [];
 
   // Formatta la data corrente
   const oggi = new Date();
@@ -135,6 +154,54 @@ export default function Home() {
             </Link>
           </motion.div>
         ))}
+      </div>
+
+      {/* Widget Ricerca Cliente */}
+      <div className="bg-white rounded-2xl border border-slate-100 p-5 mb-8">
+        <h2 className="font-bold text-base mb-3 flex items-center gap-2">
+          <Users size={18} className="text-violet-500" />
+          Cerca Cliente
+        </h2>
+        <div className="relative">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            ref={cercaRef}
+            type="text"
+            placeholder="Nome cliente..."
+            value={cercaCliente}
+            onChange={(e) => { setCercaCliente(e.target.value); setShowClientiDropdown(true); }}
+            onFocus={() => setShowClientiDropdown(true)}
+            onBlur={() => setTimeout(() => setShowClientiDropdown(false), 150)}
+            className="w-full pl-10 pr-10 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white"
+          />
+          {cercaCliente && (
+            <button
+              onClick={() => { setCercaCliente(''); setShowClientiDropdown(false); }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            >
+              <X size={18} />
+            </button>
+          )}
+          {showClientiDropdown && clientiFiltrati.length > 0 && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+              {clientiFiltrati.map(cliente => (
+                <button
+                  key={cliente.id}
+                  onMouseDown={() => navigate(`/clienti/${cliente.id}`)}
+                  className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center justify-between"
+                >
+                  <span className="font-medium">{cliente.nome}</span>
+                  <ArrowUpRight size={16} className="text-slate-400" />
+                </button>
+              ))}
+            </div>
+          )}
+          {showClientiDropdown && cercaCliente && clientiFiltrati.length === 0 && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg p-4 text-center text-slate-500 text-sm">
+              Nessun cliente trovato
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Footer */}

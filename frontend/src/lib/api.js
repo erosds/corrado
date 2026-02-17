@@ -72,6 +72,8 @@ export const ordiniApi = {
   dettaglio: (id) => api.get(`/ordini/${id}`),
   crea: (data) => api.post('/ordini/', data),
   aggiorna: (id, data) => api.put(`/ordini/${id}`, data),
+  aggiornaIncasso: (id, data_incasso_mulino) =>
+    api.patch(`/ordini/${id}/incasso`, { data_incasso_mulino }),
   elimina: (id) => api.delete(`/ordini/${id}`),
   ultimoPrezzo: (clienteId, prodottoId) =>
     api.get(`/ordini/ultimo-prezzo/${clienteId}/${prodottoId}`),

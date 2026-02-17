@@ -195,18 +195,6 @@ Cordiali saluti`;
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={openMailDialog}
-            disabled={!!ordine.email_inviata_il}
-            className={`p-2.5 border rounded-xl transition-colors ${
-              ordine.email_inviata_il
-                ? 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed'
-                : 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50'
-            }`}
-            title={ordine.email_inviata_il ? `Inviata il ${formatDate(ordine.email_inviata_il)}` : 'Invia Mail al mulino'}
-          >
-            <Mail size={18} />
-          </button>
           <Link
             to={`/ordini/${ordine.id}/modifica`}
             className="p-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors"
@@ -347,6 +335,27 @@ Cordiali saluti`;
           <p className="text-slate-700 whitespace-pre-wrap">{ordine.note}</p>
         </div>
       )}
+
+      {/* Sezione Mail */}
+      <div className="bg-white rounded-2xl border border-slate-100 p-5 mb-4">
+        <h3 className="font-bold text-sm text-slate-400 uppercase tracking-wider mb-3">
+          Email Mulino
+        </h3>
+        {ordine.email_inviata_il ? (
+          <div className="flex items-center gap-2 text-emerald-600">
+            <CheckCircle size={18} />
+            <span className="font-medium">Inviata il {formatDate(ordine.email_inviata_il)}</span>
+          </div>
+        ) : (
+          <button
+            onClick={openMailDialog}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
+          >
+            <Mail size={18} />
+            Invia Mail al Mulino
+          </button>
+        )}
+      </div>
 
       {/* Mail Dialog */}
       {showMailDialog && (

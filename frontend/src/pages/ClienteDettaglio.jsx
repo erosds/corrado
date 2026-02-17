@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { 
-  Phone, Mail, MapPin, CreditCard, Edit, Trash2, 
-  Package, ChevronRight, Factory, ArrowLeft 
+import {
+  Phone, Mail, MapPin, CreditCard, Edit, Trash2,
+  Package, ChevronRight, Factory, ArrowLeft, Search, X
 } from 'lucide-react';
 import { clientiApi } from '@/lib/api';
 import { FormCliente } from './Clienti';
@@ -15,6 +15,7 @@ export default function ClienteDettaglio() {
   const [loading, setLoading] = useState(true);
   const [showEdit, setShowEdit] = useState(false);
   const [tab, setTab] = useState('prezzi'); // 'prezzi' | 'info'
+  const [cercaProdotto, setCercaProdotto] = useState('');
 
   useEffect(() => {
     caricaDati();
@@ -48,14 +49,26 @@ export default function ClienteDettaglio() {
     }
   };
 
-  // Raggruppa prezzi per mulino
-  const prezziPerMulino = prezzi.reduce((acc, p) => {
+  // Raggruppa prezzi per mulino (ordinati alfabeticamente)
+  const prezziFiltered = cercaProdotto
+    ? prezzi.filter(p => p.prodotto_nome?.toLowerCase().includes(cercaProdotto.toLowerCase()))
+    : prezzi;
+
+  const prezziPerMulino = prezziFiltered.reduce((acc, p) => {
     if (!acc[p.mulino_nome]) {
       acc[p.mulino_nome] = [];
     }
     acc[p.mulino_nome].push(p);
     return acc;
   }, {});
+
+  // Mulini ordinati alfabeticamente, prodotti per ciascun mulino ordinati alfabeticamente
+  const muliniOrdinati = Object.keys(prezziPerMulino).sort((a, b) => a.localeCompare(b, 'it'));
+  for (const mulino of muliniOrdinati) {
+    prezziPerMulino[mulino].sort((a, b) =>
+      (a.prodotto_nome || '').localeCompare(b.prodotto_nome || '', 'it')
+    );
+  }
 
   if (loading) {
     return (
@@ -250,24 +263,48 @@ export default function ClienteDettaglio() {
         </div>
       ) : (
         /* Tab Prezzi */
-        <div className="space-y-6">
-          {Object.keys(prezziPerMulino).length === 0 ? (
+        <div className="space-y-4">
+          {/* Barra ricerca prodotti */}
+          <div className="relative">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cerca prodotto..."
+              value={cercaProdotto}
+              onChange={(e) => setCercaProdotto(e.target.value)}
+              className="w-full pl-10 pr-10 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white"
+            />
+            {cercaProdotto && (
+              <button
+                onClick={() => setCercaProdotto('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
+
+          {muliniOrdinati.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-2xl border border-slate-100">
               <Package className="mx-auto text-slate-300 mb-4" size={48} />
-              <p className="text-slate-500">Nessun prezzo registrato</p>
-              <p className="text-sm text-slate-400 mt-1">
-                I prezzi verranno salvati automaticamente con gli ordini
+              <p className="text-slate-500">
+                {cercaProdotto ? 'Nessun prodotto trovato' : 'Nessun prezzo registrato'}
               </p>
+              {!cercaProdotto && (
+                <p className="text-sm text-slate-400 mt-1">
+                  I prezzi verranno salvati automaticamente con gli ordini
+                </p>
+              )}
             </div>
           ) : (
-            Object.entries(prezziPerMulino).map(([mulino, prodotti]) => (
+            muliniOrdinati.map((mulino) => (
               <div key={mulino} className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
                 <div className="bg-slate-50 px-5 py-3 flex items-center gap-2">
                   <Factory size={18} className="text-slate-500" />
                   <h3 className="font-bold">{mulino}</h3>
                 </div>
                 <div className="divide-y divide-slate-100">
-                  {prodotti.map((p, idx) => (
+                  {prezziPerMulino[mulino].map((p, idx) => (
                     <div key={idx} className="px-5 py-3 flex items-center justify-between">
                       <span className="text-slate-700">{p.prodotto_nome}</span>
                       <span className="font-bold text-lg">

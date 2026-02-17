@@ -45,6 +45,8 @@ class RigaProvvigione(BaseModel):
     pedane: Optional[Decimal] = None
     prodotto_nome: str
     prodotto_tipologia: Optional[str] = None
+    mulino_id: Optional[int] = None
+    mulino_nome: Optional[str] = None
     quintali: Decimal
     prezzo_quintale: Decimal
     prezzo_totale: Decimal
@@ -258,6 +260,7 @@ def provvigioni_ordini(
             if not prodotto:
                 continue
 
+            mulino_riga = db.query(Mulino).filter(Mulino.id == riga.mulino_id).first()
             provvigione = calcola_provvigione_riga(riga, prodotto)
 
             righe_result.append(RigaProvvigione(
@@ -265,6 +268,8 @@ def provvigioni_ordini(
                 pedane=riga.pedane,
                 prodotto_nome=prodotto.nome,
                 prodotto_tipologia=prodotto.tipologia,
+                mulino_id=riga.mulino_id,
+                mulino_nome=mulino_riga.nome if mulino_riga else None,
                 quintali=riga.quintali,
                 prezzo_quintale=riga.prezzo_quintale,
                 prezzo_totale=riga.prezzo_totale,

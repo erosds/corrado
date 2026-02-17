@@ -256,6 +256,7 @@ export default function Pagamenti() {
                                     <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">Pedane</th>
                                     <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">Prodotto</th>
                                     <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">Tipologia</th>
+                                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">Mulino</th>
                                     <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">Quintali</th>
                                     <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">€/q</th>
                                     <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">Totale</th>
@@ -282,6 +283,14 @@ export default function Pagamenti() {
                                                 : 'bg-slate-100 text-slate-600'
                                           }`}>
                                             {riga.prodotto_tipologia}
+                                          </span>
+                                        ) : '-'}
+                                      </td>
+                                      <td className="px-4 py-2.5 text-slate-600">
+                                        {riga.mulino_nome ? (
+                                          <span className="flex items-center gap-1">
+                                            <Factory size={12} className="text-slate-400" />
+                                            {riga.mulino_nome}
                                           </span>
                                         ) : '-'}
                                       </td>
@@ -390,6 +399,12 @@ export default function Pagamenti() {
                           <span>{riga.prodotto_nome}</span>
                           <span className="text-emerald-600">{formatCurrency(riga.provvigione_calcolata)}</span>
                         </div>
+                        {riga.mulino_nome && (
+                          <div className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
+                            <Factory size={11} className="text-slate-400" />
+                            {riga.mulino_nome}
+                          </div>
+                        )}
                         <div className="text-xs text-slate-500">
                           {parseFloat(riga.quintali).toFixed(1)}q · €{parseFloat(riga.prezzo_totale).toFixed(2)} · {formatProvvigione(riga)}
                         </div>

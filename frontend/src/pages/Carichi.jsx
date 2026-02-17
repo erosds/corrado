@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Factory, Unlink, AlertCircle, GripVertical, Loader2, Check, Truck, Package } from 'lucide-react';
+import { Plus, Factory, Unlink, AlertCircle, GripVertical, Loader2, Check, Truck, Package, Pencil } from 'lucide-react';
 import { CSS } from '@dnd-kit/utilities';
 import { ordiniApi, trasportatoriApi, muliniApi, carichiApi } from '@/lib/api';
 import DateHeader from '@/components/DateHeader';
@@ -89,7 +89,18 @@ function SortableCaricoRow({
               )}
             </td>
 
-            <td className="px-4 py-3 text-sm font-medium text-slate-400">#{o.id}</td>
+            <td className="px-2 py-3 text-sm" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-1">
+                <span className="text-slate-400 font-medium text-xs mr-3">#{o.id}</span>
+                <Link
+                  to={`/ordini/${o.id}/modifica`}
+                  className="text-slate-300 hover:text-amber-500 transition-colors"
+                  title="Modifica ordine"
+                >
+                  <Pencil size={16} />
+                </Link>
+              </div>
+            </td>
 
             <td className="px-4 py-3 text-sm text-slate-500">
               {o.data_ordine ? new Date(o.data_ordine).toLocaleDateString('it-IT') : '-'}
@@ -553,7 +564,7 @@ export default function Carichi() {
                   <thead className="bg-slate-50 border-b border-slate-100 text-left text-xs font-semibold text-slate-500 uppercase">
                     <tr>
                       <th className="px-4 py-2 w-10"></th>
-                      <th className="px-4 py-2 w-20">ID</th>
+                      <th className="px-2 py-2 w-14">ID</th>
                       <th className="px-4 py-2 w-24">Inserimento</th>
                       <th className="px-4 py-2">Mulino</th>
                       <th className="px-4 py-2">Cliente</th>
@@ -615,7 +626,18 @@ export default function Carichi() {
                           <React.Fragment key={o.id}>
                             <tr className={`hover:bg-slate-50/50 cursor-pointer ${idx === 0 ? 'border-t border-slate-100' : ''}`} onClick={() => toggleEspansione(o.id)}>
                               <td className="px-4 py-3"></td>
-                              <td className="px-4 py-3 text-sm font-medium text-slate-400">#{o.id}</td>
+                              <td className="px-2 py-3 text-sm" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-1">
+                <span className="text-slate-400 font-medium text-xs">#{o.id}</span>
+                <Link
+                  to={`/ordini/${o.id}/modifica`}
+                  className="p-1 text-slate-300 hover:text-amber-500 transition-colors"
+                  title="Modifica ordine"
+                >
+                  <Pencil size={13} />
+                </Link>
+              </div>
+            </td>
                               <td className="px-4 py-3 text-sm text-slate-500">{new Date(o.data_ordine).toLocaleDateString('it-IT')}</td>
                               <td className="px-4 py-3 text-sm text-slate-600">{c.mulino_nome}</td>
                               <td className="px-4 py-3 font-semibold text-slate-900">{o.cliente_nome}</td>

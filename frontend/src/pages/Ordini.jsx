@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Plus, Search, Package, Trash2, Search as ViewIcon, ChevronUp, ChevronDown, X, Factory, Pencil
@@ -20,6 +20,7 @@ export default function Ordini() {
   const [filtroDataDa, setFiltroDataDa] = useState('');
   const [filtroDataA, setFiltroDataA] = useState('');
   const [filtroIncasso, setFiltroIncasso] = useState(''); // '' | 'con' | 'senza'
+  const [aggiornandoIncasso, setAggiornandoIncasso] = useState(null);
 
   useEffect(() => {
     caricaDati();
@@ -118,6 +119,20 @@ export default function Ordini() {
     return ordinamento.direzione === 'asc'
       ? <ChevronUp size={14} className="inline ml-1" />
       : <ChevronDown size={14} className="inline ml-1" />;
+  };
+
+  const handleAggiornandoIncasso = async (ordineId, nuovaData) => {
+    setAggiornandoIncasso(ordineId);
+    try {
+      await ordiniApi.aggiornaIncasso(ordineId, nuovaData || null);
+      setOrdini(prev => prev.map(o =>
+        o.id === ordineId ? { ...o, data_incasso_mulino: nuovaData || null } : o
+      ));
+    } catch (error) {
+      console.error('Errore aggiornamento incasso:', error);
+    } finally {
+      setAggiornandoIncasso(null);
+    }
   };
 
   const toggleFiltroMulino = (mulinoId) => {
@@ -387,8 +402,25 @@ export default function Ordini() {
                         <td className="px-4 py-3 text-sm text-slate-600">
                           {formatDate(ordine.data_ordine)}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">
-                          {formatDate(ordine.data_incasso_mulino)}
+                        <td className="px-4 py-3 text-sm" onClick={(e) => e.stopPropagation()}>
+                          <div className="relative inline-block">
+                            <input
+                              type="date"
+                              value={ordine.data_incasso_mulino ? ordine.data_incasso_mulino.split('T')[0] : ''}
+                              onChange={(e) => handleAggiornandoIncasso(ordine.id, e.target.value)}
+                              onClick={(e) => { e.stopPropagation(); e.target.showPicker?.(); }}
+                              disabled={aggiornandoIncasso === ordine.id}
+                              className="px-2 py-1 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 disabled:opacity-50"
+                            />
+                            {ordine.data_incasso_mulino && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleAggiornandoIncasso(ordine.id, ''); }}
+                                className="absolute -right-5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-red-500 transition-colors"
+                              >
+                                <X size={14} />
+                              </button>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-lg ${ordine.tipo_ordine === 'pedane'
@@ -591,15 +623,22 @@ export default function Ordini() {
                     </div>
                   </div>
 
-                  {/* 3a Riga: Ritiro, Incasso e Trasportatore (read-only) */}
-                  <div className="grid grid-cols-3 gap-3">
+                  {/* 3a Riga: Ritiro, Incasso e Trasportatore */}
+                  <div className="grid grid-cols-3 gap-3" onClick={(e) => e.stopPropagation()}>
                     <div>
                       <span className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Ritiro</span>
                       <span className="text-sm font-medium text-slate-700">{formatDate(ordine.data_ritiro)}</span>
                     </div>
                     <div>
                       <span className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Incasso</span>
-                      <span className="text-sm font-medium text-slate-700">{formatDate(ordine.data_incasso_mulino)}</span>
+                      <input
+                        type="date"
+                        value={ordine.data_incasso_mulino ? ordine.data_incasso_mulino.split('T')[0] : ''}
+                        onChange={(e) => handleAggiornandoIncasso(ordine.id, e.target.value)}
+                        onClick={(e) => { e.stopPropagation(); e.target.showPicker?.(); }}
+                        disabled={aggiornandoIncasso === ordine.id}
+                        className="w-full text-xs border border-slate-200 rounded-lg px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-slate-900 disabled:opacity-50"
+                      />
                     </div>
                     <div>
                       <span className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Trasportatore</span>
