@@ -29,3 +29,6 @@ venv
 .claude
 .env
 backend/.env
+
+deploy-full.sh
+deploy-update.sh
