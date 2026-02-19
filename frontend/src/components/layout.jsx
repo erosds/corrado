@@ -121,7 +121,7 @@ export default function Layout() {
 
       {/* Sidebar Desktop */}
       <aside className="hidden md:flex flex-col fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-slate-100 p-6">
-        <div className="mb-10">
+        <div className="mb-5">
           <img src="/flour.png" alt="Logo" className="w-12 h-12 object-contain" />
           <h1 className="font-black text-xl tracking-tight">FlourManagement™</h1>
           <p className="text-xs text-slate-400 font-medium">Corrado Irlando</p>
