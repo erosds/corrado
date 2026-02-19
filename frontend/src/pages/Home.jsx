@@ -59,11 +59,11 @@ export default function Home() {
   // Menu items - tutte le sezioni come riquadri uniformi
   const menuItems = [
     { 
-      to: '/ordini', 
-      icon: ShoppingCart, 
-      title: 'Ordini', 
-      desc: 'Gestisci ordini clienti',
-      color: 'bg-blue-50 text-blue-600'
+      to: '/carichi', 
+      icon: Truck, 
+      title: 'Planner', 
+      desc: 'Pianifica ordini',
+      color: 'bg-rose-50 text-rose-600'
     },
     { 
       to: '/ordini/nuovo', 
@@ -87,11 +87,11 @@ export default function Home() {
       color: 'bg-amber-50 text-amber-600'
     },
     { 
-      to: '/carichi', 
-      icon: Truck, 
-      title: 'Carichi', 
-      desc: 'Carichi completi',
-      color: 'bg-rose-50 text-rose-600'
+      to: '/ordini', 
+      icon: ShoppingCart, 
+      title: 'Ordini', 
+      desc: 'Gestisci ordini',
+      color: 'bg-blue-50 text-blue-600'
     },
     { 
       to: '/trasportatori', 

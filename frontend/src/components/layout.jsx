@@ -6,6 +6,7 @@ import {
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
+import flourBw from '../assets/flour-2.png';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Home' },
@@ -65,7 +66,10 @@ export default function Layout() {
               <ChevronLeft size={24} />
             </button>
           ) : (
-            <div className="font-bold text-sm tracking-tight">FlourManagement™</div>
+            <div className="flex items-center gap-2">
+                <img src={flourBw} alt="" className="w-6 h-6 object-contain" />
+                <span className="font-bold text-sm tracking-tight">FlourManagement™</span>
+              </div>
           )}
 
           <button
