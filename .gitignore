@@ -30,5 +30,5 @@ venv
 .env
 backend/.env
 
-deploy-full.sh
+primo-deploy-full.sh
 deploy-update.sh

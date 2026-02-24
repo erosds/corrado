@@ -72,7 +72,7 @@ export default function ClienteDettaglio() {
 
   if (loading) {
     return (
-      <div className="p-4 md:p-8 max-w-4xl mx-auto">
+      <div className="p-4 md:p-8 max-w-5xl mx-auto">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-slate-200 rounded w-1/3"></div>
           <div className="h-32 bg-slate-100 rounded-2xl"></div>
@@ -93,7 +93,7 @@ export default function ClienteDettaglio() {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>

@@ -27,7 +27,7 @@ export default function Clienti() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+    <div className="p-4 md:p-8">
       <DateHeader />
 
       {/* Header */}
@@ -413,7 +413,7 @@ function FormCliente({ cliente = null, onClose, onSaved }) {
               id="riba"
               checked={formData.riba}
               onChange={(e) => setFormData({ ...formData, riba: e.target.checked })}
-              className="w-5 h-5 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+              className="w-5 h-5 rounded border-slate-300 accent-slate-900 focus:ring-slate-900 cursor-pointer"
             />
             <label htmlFor="riba" className="text-sm font-medium text-slate-700">
               Pagamento RIBA (+60gg fine mese)

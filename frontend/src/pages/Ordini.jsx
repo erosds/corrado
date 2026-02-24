@@ -194,7 +194,7 @@ export default function Ordini() {
   const ordiniRitirati = ordini.filter(o => calcolaStato(o.data_ritiro) === 'ritirato').length;
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+    <div className="p-4 md:p-8">
       <DateHeader />
 
       {/* Header */}

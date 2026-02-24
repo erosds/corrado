@@ -419,7 +419,7 @@ export default function OrdineNuovo() {
   const inputClass = "w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white text-base";
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto pb-32">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto pb-32">
       {/* Data */}
       <DateHeader />
 
@@ -782,7 +782,7 @@ export default function OrdineNuovo() {
 
         {/* Riepilogo e Submit */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 md:relative md:border-0 md:bg-transparent md:p-0 md:mt-4">
-          <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
+          <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
             <div>
               <p className="text-sm text-slate-500">Totale ordine</p>
               <p className="text-xl font-black">
