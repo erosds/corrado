@@ -1,24 +1,27 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
-import Home from './pages/Home';
-import Clienti from './pages/Clienti';
-import ClienteDettaglio from './pages/ClienteDettaglio';
-import Ordini from './pages/Ordini';
-import OrdineNuovo from './pages/OrdineNuovo';
-import OrdineDettaglio from './pages/OrdineDettaglio';
-import Mulini from './pages/Mulini';
-import MulinoDettaglio from './pages/MulinoDettaglio';
-import Carichi from './pages/Carichi';
-import Pagamenti from './pages/Pagamenti';
-import Trasportatori from './pages/Trasportatori';
-import Login from './pages/Login';
+
+const Home = lazy(() => import('./pages/Home'));
+const Clienti = lazy(() => import('./pages/Clienti'));
+const ClienteDettaglio = lazy(() => import('./pages/ClienteDettaglio'));
+const Ordini = lazy(() => import('./pages/Ordini'));
+const OrdineNuovo = lazy(() => import('./pages/OrdineNuovo'));
+const OrdineDettaglio = lazy(() => import('./pages/OrdineDettaglio'));
+const Mulini = lazy(() => import('./pages/Mulini'));
+const MulinoDettaglio = lazy(() => import('./pages/MulinoDettaglio'));
+const Carichi = lazy(() => import('./pages/Carichi'));
+const Pagamenti = lazy(() => import('./pages/Pagamenti'));
+const Trasportatori = lazy(() => import('./pages/Trasportatori'));
+const Login = lazy(() => import('./pages/Login'));
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <Suspense fallback={null}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route
@@ -55,6 +58,7 @@ function App() {
             <Route path="trasportatori" element={<Trasportatori />} />
           </Route>
         </Routes>
+        </Suspense>
       </AuthProvider>
     </BrowserRouter>
   );

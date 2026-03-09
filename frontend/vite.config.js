@@ -13,6 +13,18 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'framer-motion': ['framer-motion'],
+          'dnd-kit': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+          'ui-vendor': ['lucide-react', 'clsx', 'axios'],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     host: true, // <--- FONDAMENTALE: permette l'accesso dalla rete locale
